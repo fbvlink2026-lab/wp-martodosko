@@ -1,9 +1,9 @@
 # 📋 Talaan ng Pagbuo — WP Martodosko
 
 ---
-📅 **Petsa:** 2026-09-01 14:36:07 UTC
-🎯 **Katayuan:** ❌ NABIGO
-📝 **Detalye:** Hindi nabuo ang APK — tingnan ang log sa ibaba
+📅 **Petsa:** 2026-09-01 15:59:09 UTC
+🎯 **Katayuan:** ✅ TAGUMPAY
+📝 **Detalye:** Matagumpay na nabuo ang WP Martodosko APK
 ---
 
 ## 📋 Buong Log ng Pagbuo
@@ -54,33 +54,34 @@ Recommendation: remove package="com.martodosko.wp" from the source AndroidManife
 > Task :app:compileDebugShaders NO-SOURCE
 > Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:mergeDebugAssets
-> Task :app:compressDebugAssets
 > Task :app:processDebugJavaRes NO-SOURCE
+> Task :app:compressDebugAssets
 > Task :app:mergeDebugJavaResource
 > Task :app:processDebugManifestForPackage
 > Task :app:checkDebugDuplicateClasses
 > Task :app:desugarDebugFileDependencies
-> Task :app:processDebugResources FAILED
+> Task :app:processDebugResources
+
+> Task :app:compileDebugJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
 > Task :app:mergeExtDexDebug
+> Task :app:mergeLibDexDebug
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugJniLibFolders
+> Task :app:mergeDebugNativeLibs NO-SOURCE
+> Task :app:stripDebugDebugSymbols NO-SOURCE
+> Task :app:mergeProjectDexDebug
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
 
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':app:processDebugResources'.
-> A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
-   > Android resource linking failed
-     /home/runner/work/wp-martodosko/wp-martodosko/app/build/intermediates/packaged_manifests/debug/AndroidManifest.xml:19: error: resource mipmap/ic_launcher (aka com.martodosko.wp:mipmap/ic_launcher) not found.
-     error: failed processing manifest.
-
-
-* Try:
-> Run with --stacktrace option to get the stack trace.
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-> Get more help at https://help.gradle.org.
-
-BUILD FAILED in 44s
-20 actionable tasks: 20 executed
+BUILD SUCCESSFUL in 52s
+30 actionable tasks: 30 executed
 ```
 
 ---
