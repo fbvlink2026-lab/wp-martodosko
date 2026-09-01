@@ -18,6 +18,63 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      # ==============================================
+      # 🆕 HAKBANG A — I-download ang WordPress → assets/wordpress
+      # ==============================================
+      - name: 📦 Ihanda ang WordPress sa assets/
+        run: |
+          ASSETS_DIR="app/src/main/assets/wordpress"
+          mkdir -p "$ASSETS_DIR"
+          echo "📥 Dinadownload ang WordPress..."
+          wget -q https://wordpress.org/latest.zip -O /tmp/wp.zip
+          unzip -q /tmp/wp.zip -d /tmp
+          echo "📂 Kinokopya papunta sa assets/wordpress..."
+          cp -r /tmp/wordpress/* "$ASSETS_DIR"/
+          echo "✅ WordPress nakalagay — $(ls -1 "$ASSETS_DIR" | wc -l) files/folders"
+
+      # ==============================================
+      # 🆕 HAKBANG B — I-update ang MainActivity → buksan lokal na WordPress
+      # ==============================================
+      - name: 📄 I-update ang MainActivity — binabasa mula sa assets
+        run: |
+          DST="app/src/main/java/com/martodosko/wp/MainActivity.java"
+          mkdir -p "$(dirname "$DST")"
+          cat > "$DST" << 'JAVA'
+package com.martodosko.wp;
+
+import android.os.Bundle;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+    private WebView webView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        webView = findViewById(R.id.webview);
+        WebSettings s = webView.getSettings();
+        s.setJavaScriptEnabled(true);
+        s.setDomStorageEnabled(true);
+        s.setAllowFileAccess(true);
+        webView.loadUrl("file:///android_asset/wordpress/index.html");
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webView.canGoBack()) webView.goBack();
+        else super.onBackPressed();
+    }
+}
+JAVA
+          echo "✅ MainActivity updated — binabasa mula sa assets/wordpress"
+
+      # ==============================================
+      # ⬇️ MULA DITO — GANOON PA RIN, WALANG BINAGO! ⬇️
+      # ==============================================
+
       - name: ⚡ Check Gradle Wrapper
         id: wrapper-check
         run: |
@@ -68,10 +125,10 @@ jobs:
           ASSETS_DIR="app/src/main/assets"
           TARGET_FILE="$ASSETS_DIR/errors.html"
           mkdir -p "$ASSETS_DIR"
-          if [ -f "$TARGET_FILE" ]; then rm -f "$TARGET_FILE"; fi
-          if [ -f "$STATUS_FILE" ] && [ "$(cat $STATUS_FILE)" = "SUCCESS" ]; then
+          [ -f "$TARGET_FILE" ] && rm -f "$TARGET_FILE"
+          if [ -f "$STATUS_FILE" ] && [ "$(cat "$STATUS_FILE")" = "SUCCESS" ]; then
             STATUS_DISPLAY="✅ TAGUMPAY"
-            STATUS_DETAIL="Matagumpay na nabuo ang WP Martodosko APK"
+            STATUS_DETAIL="Matagumpay na nabuo — may WordPress na sa loob!"
           else
             STATUS_DISPLAY="❌ NABIGO"
             STATUS_DETAIL="Hindi nabuo ang APK"
@@ -87,7 +144,7 @@ jobs:
             echo ""
             echo "## 📋 Buong Log ng Pagbuo"
             echo "\`\`\`"
-            if [ -f "$LOG_FILE" ]; then cat "$LOG_FILE"; fi
+            [ -f "$LOG_FILE" ] && cat "$LOG_FILE" || echo "(Walang log)"
             echo "\`\`\`"
             echo ""
             echo "---"
@@ -130,7 +187,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add app/src/main/assets/ docs/ 2>/dev/null || true
           if ! git diff --staged --quiet; then
-            git commit -m "📋 Build Result: $(date +%Y-%m-%d %H:%M)"
+            git commit -m "📋 Build: WordPress in assets" || true
             git push || true
           fi
         env:
