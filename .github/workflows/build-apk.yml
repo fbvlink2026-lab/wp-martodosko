@@ -43,7 +43,7 @@ jobs:
         run: chmod +x ./gradlew 2>/dev/null || true
 
       # ==========================================
-      # 🔨 HAKBANG 1 — BUUIN ANG APK ✅ ITUTULOY KAHIT MAY ERROR
+      # 🔨 HAKBANG 1 — BUUIN ANG APK ✅ ITUTULOY KAHIT MAY ERROR PARA MAKOPYA ANG ASSETS
       # ==========================================
       - name: 🔨 Buuin ang APK
         id: build-step
@@ -67,7 +67,7 @@ jobs:
           echo "EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
 
       # ==========================================
-      # 📄 HAKBANG 2 — GUMAGAWA NG MAGANDANG errors.html ✨
+      # 📄 HAKBANG 2 — BURAHIN → ISULAT BAGONG errors.html ✅ LAGING GAGANA
       # ==========================================
       - name: 📄 Burahin Luma → Isulat BAGONG errors.html sa assets/
         id: write-log
@@ -87,158 +87,36 @@ jobs:
             echo "🗑️ BINURA ANG LUMANG errors.html"
           fi
 
-          # ✅ TUKUYIN ANG KATAYUAN
           if [ -f "$STATUS_FILE" ] && [ "$(cat $STATUS_FILE)" = "SUCCESS" ]; then
             STATUS_DISPLAY="✅ TAGUMPAY"
-            STATUS_TEXT="MATAGUMPAY"
             STATUS_DETAIL="Matagumpay na nabuo ang WP Martodosko APK"
-            BADGE_COLOR="#10b981"
-            CARD_BORDER="#d1fae5"
           else
             STATUS_DISPLAY="❌ NABIGO"
-            STATUS_TEXT="NABIGO"
-            STATUS_DETAIL="Hindi nabuo ang APK — tingnan ang mga error sa ibaba"
-            BADGE_COLOR="#ef4444"
-            CARD_BORDER="#fee2e2"
+            STATUS_DETAIL="Hindi nabuo ang APK — tingnan ang log sa ibaba"
           fi
 
-          # ✅ KUNIN ANG MGA ERROR NA LINYA
-          ERROR_LINES=""
-          if [ -f "$LOG_FILE" ] && [ "$STATUS_DISPLAY" != "✅ TAGUMPAY" ]; then
-            ERROR_LINES=$(grep -n -i "error\|failed\|exception\|cannot\|unable" "$LOG_FILE" | head -35)
-          fi
-
-          # ✅ I-ESCAPE ANG BUONG LOG PARA SA HTML
-          ESCAPED_LOG=""
-          if [ -f "$LOG_FILE" ]; then
-            ESCAPED_LOG=$(sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' "$LOG_FILE")
-          fi
-
-          # ✅ BUUIN ANG HTML — MAGANDA NA! 🎨
-          cat > "$TARGET_FILE" << HTMLEND
-<!DOCTYPE html>
-<html lang="tl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Build Result — WP Martodosko</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-      min-height: 100vh;
-      padding: 24px 16px;
-    }
-    .container { max-width: 900px; margin: 0 auto; }
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 32px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      border-left: 6px solid $CARD_BORDER;
-    }
-    h1 { font-size: 28px; color: #1e293b; margin-bottom: 8px; }
-    .badge {
-      display: inline-block;
-      padding: 10px 28px;
-      border-radius: 50px;
-      color: white;
-      font-weight: 700;
-      font-size: 18px;
-      margin: 12px 0 20px;
-      background: $BADGE_COLOR;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-    .meta { color: #64748b; font-size: 15px; margin-bottom: 8px; }
-    .desc { color: #334155; font-size: 16px; line-height: 1.6; }
-    h2 {
-      font-size: 18px;
-      color: #1e293b;
-      margin: 28px 0 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    h2::before {
-      content: '';
-      width: 4px;
-      height: 18px;
-      border-radius: 2px;
-      background: $BADGE_COLOR;
-      display: inline-block;
-    }
-    pre {
-      background: #0f172a;
-      color: #e2e8f0;
-      padding: 20px;
-      border-radius: 12px;
-      font-family: 'Consolas', 'Courier New', monospace;
-      font-size: 13px;
-      line-height: 1.7;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-    .error-line {
-      background: rgba(239,68,68,0.15);
-      color: #fca5a5;
-      padding: 6px 12px;
-      border-radius: 6px;
-      display: block;
-      margin: 4px 0;
-      border-left: 3px solid #ef4444;
-      font-weight: 500;
-    }
-    .footer {
-      text-align: center;
-      color: #94a3b8;
-      font-size: 13px;
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #e2e8f0;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="card">
-      <h1>📦 Build — WP Martodosko</h1>
-      <div class="badge">$STATUS_TEXT</div>
-      <p class="meta">📅 Petsa: $DATE</p>
-      <p class="desc">$STATUS_DETAIL</p>
-    </div>
-HTMLEND
-
-          # ✅ KUNG MAY ERROR — IPAKITA ANG MGA LINYA
-          if [ "$STATUS_DISPLAY" != "✅ TAGUMPAY" ] && [ -n "$ERROR_LINES" ]; then
-            cat >> "$TARGET_FILE" << ERRSECT
-    <div class="card">
-      <h2>🔍 Mga Nakitang Error</h2>
-      <pre>
-ERRSECT
-            echo "$ERROR_LINES" | while IFS= read -r LINE; do
-              if [ -n "$LINE" ]; then
-                echo "<span class='error-line'>$LINE</span>" >> "$TARGET_FILE"
-              fi
-            done
-            echo '</pre></div>' >> "$TARGET_FILE"
-          fi
-
-          # ✅ BUONG LOG
-          cat >> "$TARGET_FILE" << LOGSECT
-    <div class="card">
-      <h2>📋 Buong Log ng Pagbuo</h2>
-      <pre>$ESCAPED_LOG</pre>
-    </div>
-    <div class="footer">
-      ✅ Talaan ng Pagbuo — WP Martodosko
-    </div>
-  </div>
-</body>
-</html>
-LOGSECT
+          # ✅ ISULAT ANG BAGONG FILE
+          {
+            echo "# 📋 Talaan ng Pagbuo — WP Martodosko"
+            echo ""
+            echo "---"
+            echo "📅 **Petsa:** $DATE"
+            echo "🎯 **Katayuan:** $STATUS_DISPLAY"
+            echo "📝 **Detalye:** $STATUS_DETAIL"
+            echo "---"
+            echo ""
+            echo "## 📋 Buong Log ng Pagbuo"
+            echo "\`\`\`"
+            if [ -f "$LOG_FILE" ]; then
+              cat "$LOG_FILE"
+            else
+              echo "(Walang nakuhang log)"
+            fi
+            echo "\`\`\`"
+            echo ""
+            echo "---"
+            echo "✅ **Katapusan ng Talaan**"
+          } > "$TARGET_FILE"
 
           echo "✅ BAGONG errors.html NAISULAT SA: $TARGET_FILE"
 
