@@ -1,9 +1,9 @@
 # 📋 Talaan ng Pagbuo — WP Martodosko
 
 ---
-📅 **Petsa:** 2026-09-01 16:58:06 UTC
-🎯 **Katayuan:** ✅ TAGUMPAY
-📝 **Detalye:** Matagumpay na nabuo ang WP Martodosko APK
+📅 **Petsa:** 2026-09-01 17:26:18 UTC
+🎯 **Katayuan:** ❌ NABIGO
+📝 **Detalye:** Hindi nabuo ang APK — tingnan ang log sa ibaba
 ---
 
 ## 📋 Buong Log ng Pagbuo
@@ -54,34 +54,35 @@ Recommendation: remove package="com.martodosko.wp" from the source AndroidManife
 > Task :app:compileDebugShaders NO-SOURCE
 > Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:mergeDebugAssets
-> Task :app:processDebugManifestForPackage
 > Task :app:processDebugJavaRes NO-SOURCE
+> Task :app:processDebugManifestForPackage
 > Task :app:compressDebugAssets
 > Task :app:processDebugResources
 > Task :app:checkDebugDuplicateClasses
 > Task :app:mergeDebugJavaResource
 
-> Task :app:compileDebugJavaWithJavac
+> Task :app:compileDebugJavaWithJavac FAILED
+/home/runner/work/wp-martodosko/wp-martodosko/app/src/main/java/com/martodosko/wp/MainActivity.java:15: error: cannot find symbol
+        webView = findViewById(R.id.webview);
+                                   ^
+  symbol:   variable webview
+  location: class id
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
+1 error
 
-> Task :app:desugarDebugFileDependencies
-> Task :app:mergeLibDexDebug
-> Task :app:dexBuilderDebug
-> Task :app:mergeDebugJniLibFolders
-> Task :app:mergeDebugNativeLibs NO-SOURCE
-> Task :app:stripDebugDebugSymbols NO-SOURCE
-> Task :app:mergeProjectDexDebug
-> Task :app:validateSigningDebug
-> Task :app:writeDebugAppMetadata
-> Task :app:writeDebugSigningConfigVersions
-> Task :app:mergeExtDexDebug
-> Task :app:packageDebug
-> Task :app:createDebugApkListingFileRedirect
-> Task :app:assembleDebug
+FAILURE: Build failed with an exception.
 
-BUILD SUCCESSFUL in 51s
-30 actionable tasks: 30 executed
+* What went wrong:
+Execution failed for task ':app:compileDebugJavaWithJavac'.
+> Compilation failed; see the compiler error output for details.
+
+* Try:
+> Run with --info option to get more log output.
+> Run with --scan to get full insights.
+
+BUILD FAILED in 24s
+19 actionable tasks: 19 executed
 ```
 
 ---
