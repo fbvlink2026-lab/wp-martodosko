@@ -1,0 +1,3 @@
+pluginManagement { repositories { google(); mavenCentral() } }
+rootProject.name = "WP Martodosko"
+include ':app'
