@@ -3,29 +3,24 @@ package com.martodosko.wp;
 import android.os.Bundle;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
-    private WebView webView;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        webView = findViewById(R.id.webView);
+        WebView webView = new WebView(this);
+        setContentView(webView);
 
-        WebSettings s = webView.getSettings();
-        s.setJavaScriptEnabled(true);
-        s.setDomStorageEnabled(true);
-        s.setAllowFileAccess(true);
+        WebSettings settings = webView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
 
-        // ✅ KUKUNIN ANG LAMAN MULA SA GITHUB — WALANG NAKA-LOOB SA APK!
-        webView.loadUrl("https://raw.githubusercontent.com/fbvlink2026-lab/wp-martodosko/main/docs/index.html");
-    }
+        // ✅ Opsyon 1 — docs/wordpress mula sa GitHub Pages
+        String baseUrl = "https://fbvlink2026-lab.github.io/wp-martodosko/wordpress/";
 
-    @Override
-    public void onBackPressed() {
-        if (webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
+        webView.setWebViewClient(new WebViewClient());
+        webView.loadUrl(baseUrl + "index.html");
     }
 }

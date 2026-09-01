@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions: write-all
     outputs:
-      build_status: ${{ steps.final-result.outputs.STATUS }}
+      build_status: \${{ steps.final-result.outputs.STATUS }}
     steps:
       - uses: actions/checkout@v4
 
@@ -18,24 +18,23 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # ⚡ KUNG MAYROON NANG gradlew — DERETSO NA LANG
       - name: ⚡ Check Gradle Wrapper
         id: wrapper-check
         run: |
           if [ -f "./gradlew" ] && [ -x "./gradlew" ]; then
             echo "✅ gradlew NANDOON NA"
-            echo "HAS_WRAPPER=true" >> $GITHUB_ENV
+            echo "HAS_WRAPPER=true" >> \$GITHUB_ENV
           else
             echo "⚠️ WALANG gradlew"
-            echo "HAS_WRAPPER=false" >> $GITHUB_ENV
+            echo "HAS_WRAPPER=false" >> \$GITHUB_ENV
           fi
 
-      - name: Setup Gradle 8.2 (KUNG KULANG LANG)
+      - name: Setup Gradle 8.2
         if: env.HAS_WRAPPER == 'false'
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.2-bin.zip -O /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /tmp
-          export PATH=/tmp/gradle-8.2/bin:$PATH
+          export PATH=/tmp/gradle-8.2/bin:\$PATH
           gradle wrapper --gradle-version 8.2
           chmod +x gradlew
 
@@ -43,7 +42,7 @@ jobs:
         run: chmod +x ./gradlew 2>/dev/null || true
 
       # ==========================================
-      # 🔨 HAKBANG 1 — BUUIN ANG APK ✅ ITUTULOY KAHIT MAY ERROR PARA MAKOPYA ANG ASSETS
+      # 🔨 BUUIN ANG APK
       # ==========================================
       - name: 🔨 Buuin ang APK
         id: build-step
@@ -51,130 +50,86 @@ jobs:
           mkdir -p /tmp
           LOG_FILE="/tmp/build-full.log"
           STATUS_FILE="/tmp/build-status.txt"
-
           set +e
-          ./gradlew assembleDebug > "$LOG_FILE" 2>&1
-          EXIT_CODE=$?
+          ./gradlew assembleDebug > "\$LOG_FILE" 2>&1
+          EXIT_CODE=\$?
           set -e
-
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "SUCCESS" > "$STATUS_FILE"
+          if [ \$EXIT_CODE -eq 0 ]; then
+            echo "SUCCESS" > "\$STATUS_FILE"
             echo "✅ BUILD SUCCESSFUL"
           else
-            echo "FAILED" > "$STATUS_FILE"
-            echo "❌ BUILD FAILED — Exit Code: $EXIT_CODE"
+            echo "FAILED" > "\$STATUS_FILE"
+            echo "❌ BUILD FAILED — Exit Code: \$EXIT_CODE"
           fi
-          echo "EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
+          echo "EXIT_CODE=\$EXIT_CODE" >> \$GITHUB_ENV
 
       # ==========================================
-      # 📄 HAKBANG 2 — BURAHIN → ISULAT BAGONG errors.html ✅ LAGING GAGANA
+      # 📄 errors.html
       # ==========================================
-      - name: 📄 Burahin Luma → Isulat BAGONG errors.html sa assets/
+      - name: 📄 Burahin Luma → Isulat BAGONG errors.html
         id: write-log
         if: always()
         run: |
-          DATE=$(date "+%Y-%m-%d %H:%M:%S UTC")
+          DATE=\$(date "+%Y-%m-%d %H:%M:%S UTC")
           STATUS_FILE="/tmp/build-status.txt"
           LOG_FILE="/tmp/build-full.log"
           ASSETS_DIR="app/src/main/assets"
-          TARGET_FILE="$ASSETS_DIR/errors.html"
-
-          mkdir -p "$ASSETS_DIR"
-
-          # ✅ BURAHIN MUNA — SIGURADONG MAY PAGBABAGO
-          if [ -f "$TARGET_FILE" ]; then
-            rm -f "$TARGET_FILE"
-            echo "🗑️ BINURA ANG LUMANG errors.html"
-          fi
-
-          if [ -f "$STATUS_FILE" ] && [ "$(cat $STATUS_FILE)" = "SUCCESS" ]; then
+          TARGET_FILE="\$ASSETS_DIR/errors.html"
+          mkdir -p "\$ASSETS_DIR"
+          rm -f "\$TARGET_FILE"
+          if [ -f "\$STATUS_FILE" ] && [ "\$(cat \$STATUS_FILE)" = "SUCCESS" ]; then
             STATUS_DISPLAY="✅ TAGUMPAY"
             STATUS_DETAIL="Matagumpay na nabuo ang WP Martodosko APK"
           else
             STATUS_DISPLAY="❌ NABIGO"
             STATUS_DETAIL="Hindi nabuo ang APK — tingnan ang log sa ibaba"
           fi
-
-          # ✅ ISULAT ANG BAGONG FILE
           {
             echo "# 📋 Talaan ng Pagbuo — WP Martodosko"
             echo ""
-            echo "---"
-            echo "📅 **Petsa:** $DATE"
-            echo "🎯 **Katayuan:** $STATUS_DISPLAY"
-            echo "📝 **Detalye:** $STATUS_DETAIL"
-            echo "---"
-            echo ""
-            echo "## 📋 Buong Log ng Pagbuo"
+            echo "📅 **Petsa:** \$DATE"
+            echo "🎯 **Katayuan:** \$STATUS_DISPLAY"
+            echo "📝 **Detalye:** \$STATUS_DETAIL"
+            echo "## 📋 Buong Log"
             echo "\`\`\`"
-            if [ -f "$LOG_FILE" ]; then
-              cat "$LOG_FILE"
-            else
-              echo "(Walang nakuhang log)"
-            fi
+            [ -f "\$LOG_FILE" ] && cat "\$LOG_FILE" || echo "(Walang log)"
             echo "\`\`\`"
-            echo ""
-            echo "---"
-            echo "✅ **Katapusan ng Talaan**"
-          } > "$TARGET_FILE"
-
-          echo "✅ BAGONG errors.html NAISULAT SA: $TARGET_FILE"
+          } > "\$TARGET_FILE"
+          echo "✅ errors.html naisulat"
 
       # ==========================================
-      # 📤 HAKBANG 3 — KOPYAHIN BUONG assets/ → docs/ ✅ LAGING GAGANA
+      # 📤 KOPYAHIN assets/ → docs/ — HUWAG BURAHIN docs/wordpress/ ✅
       # ==========================================
-      - name: 📤 Kopyahin BUONG Assets papunta sa /docs
+      - name: 📤 Kopyahin Assets — HUWAG BURAHIN docs/wordpress/
         run: |
           ASSETS_DIR="app/src/main/assets"
           DOCS_DIR="./docs"
-
-          echo "=== 📂 LAMAN NG assets/ BAGO KOPYAHIN ==="
-          ls -la "$ASSETS_DIR"
-          echo ""
-
-          echo "=== ✅ BURAHIN BUONG docs/ ==="
-          rm -rf "$DOCS_DIR"
-          mkdir -p "$DOCS_DIR"
-
-          echo "=== 📤 KOPYAHIN BUONG assets/ → docs/ ==="
-          cp -R "$ASSETS_DIR"/. "$DOCS_DIR/"
-
-          echo ""
-          echo "=== ✅ LAMAN NG docs/ ==="
-          ls -la "$DOCS_DIR"
-
-          if [ -f "$DOCS_DIR/errors.html" ]; then
-            echo "✅✅✅ BAGONG errors.html NAKOPYA — SIGURADO!"
-          fi
+          TEMP_DIR="/tmp/docs-backup"
+          mkdir -p "\$TEMP_DIR"
+          [ -d "\$DOCS_DIR/wordpress" ] && cp -R "\$DOCS_DIR/wordpress" "\$TEMP_DIR/" && echo "✅ NAKABACKUP docs/wordpress/"
+          find "\$DOCS_DIR" -mindepth 1 -maxdepth 1 ! -name 'wordpress' -exec rm -rf {} + 2>/dev/null || true
+          mkdir -p "\$DOCS_DIR"
+          cp -R "\$ASSETS_DIR"/. "\$DOCS_DIR/" 2>/dev/null || true
+          [ -d "\$TEMP_DIR/wordpress" ] && cp -R "\$TEMP_DIR/wordpress" "\$DOCS_DIR/" && echo "✅ NABALIK docs/wordpress/"
+          ls -la "\$DOCS_DIR/"
 
       # ==========================================
-      # 📤 HAKBANG 4 — ILAGAY ANG APK SA docs/ ✅ KUNG MAYROON
+      # 📤 HANAPIN ANG APK
       # ==========================================
       - name: 📤 Hanapin at Ihanda ang APK
         id: apk-step
         run: |
-          APK_FILE=$(find . -name "app-debug.apk" -path "*/build/*" | head -1)
-
-          if [ -n "$APK_FILE" ] && [ -f "$APK_FILE" ]; then
-            APK_SIZE=$(du -h "$APK_FILE" | cut -f1)
-            APK_SIZE_BYTES=$(stat -c%s "$APK_FILE")
-            NEW_NAME="WP-Martodosko-v1.0.apk"
-
-            cp "$APK_FILE" "docs/$NEW_NAME"
-
-            echo "✅ APK MATAGPUAN: docs/$NEW_NAME"
-            echo "APK_FOUND=true" >> $GITHUB_ENV
-            echo "APK_SIZE=$APK_SIZE" >> $GITHUB_ENV
-            echo "APK_PATH=docs/$NEW_NAME" >> $GITHUB_ENV
-            echo "APK_NAME=$NEW_NAME" >> $GITHUB_ENV
+          APK_FILE=\$(find . -name "app-debug.apk" -path "*/build/*" | head -1)
+          if [ -n "\$APK_FILE" ] && [ -f "\$APK_FILE" ]; then
+            APK_SIZE=\$(du -h "\$APK_FILE" | cut -f1)
+            cp "\$APK_FILE" "docs/WP-Martodosko-v1.0.apk"
+            echo "✅ APK MATAGPUAN"
+            echo "APK_FOUND=true" >> \$GITHUB_ENV
           else
             echo "❌ HINDI MATAGPUAN ANG APK"
-            echo "APK_FOUND=false" >> $GITHUB_ENV
+            echo "APK_FOUND=false" >> \$GITHUB_ENV
           fi
 
-      # ==========================================
-      # ✅ I-UPLOAD ANG APK ✅ KUNG MAYROON
-      # ==========================================
       - name: 📤 I-upload ang APK
         if: env.APK_FOUND == 'true'
         uses: actions/upload-artifact@v4
@@ -183,39 +138,25 @@ jobs:
           path: docs/*.apk
           retention-days: 30
 
-      # ==========================================
-      # ✅ I-COMMIT — LAGING GAGANA ✅ KAHIT WALANG APK
-      # ==========================================
-      - name: ✅ I-commit at I-push ang LAHAT
+      - name: ✅ I-commit at I-push
         if: always()
         continue-on-error: true
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
           git add app/src/main/assets/ docs/ 2>/dev/null || true
-
-          if git diff --staged --quiet; then
-            echo "ℹ️ WALANG PAGBABAGO"
-          else
-            git commit -m "📋 Build Result: $(date +%Y-%m-%d %H:%M)"
-            echo "📤 IPINAPADALA..."
+          if ! git diff --staged --quiet; then
+            git commit -m "📋 Build Result: \$(date +%Y-%m-%d %H:%M)"
             git push || git push --force
-            echo "✅ MATAGUMPAY — SABAY-SABAY ANG LAHAT!"
           fi
 
-      # ==========================================
-      # ✅ KONKLUSYON ✅ NGAYON — PULA ❌ KUNG WALANG APK!
-      # ==========================================
       - name: ✅ Resulta ng Pagbuo
         id: final-result
         if: always()
         run: |
-          if [ "${{ env.APK_FOUND }}" = "true" ]; then
-            echo "✅ TAGUMPAY — May APK, nakopya ang assets"
-            echo "STATUS=SUCCESS" >> $GITHUB_OUTPUT
+          if [ "\${{ env.APK_FOUND }}" = "true" ]; then
+            echo "STATUS=SUCCESS" >> \$GITHUB_OUTPUT
           else
-            echo "❌ NABIGO — WALANG APK DAHIL MAY ERROR SA BUILD"
-            echo "STATUS=FAILED" >> $GITHUB_OUTPUT
+            echo "STATUS=FAILED" >> \$GITHUB_OUTPUT
             exit 1
           fi
