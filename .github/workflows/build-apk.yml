@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # ✅ KAILANGAN PARA MA-PUSH ANG docs/
     steps:
       - name: 📥 Kunin ang Code
         uses: actions/checkout@v4
@@ -24,7 +26,6 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: ⚡ Check Gradle Wrapper
-        id: wrapper-check
         run: |
           if [ -f "./gradlew" ] && [ -x "./gradlew" ]; then
             echo "✅ gradlew NANDOON NA"
@@ -34,7 +35,7 @@ jobs:
             echo "HAS_WRAPPER=false" >> $GITHUB_ENV
           fi
 
-      - name: Setup Gradle 8.2 (KUNG KULANG LANG)
+      - name: Setup Gradle 8.2
         if: env.HAS_WRAPPER == 'false'
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.2-bin.zip -O /tmp/gradle.zip
@@ -46,31 +47,30 @@ jobs:
       - name: Siguraduhing Pwede ang gradlew
         run: chmod +x ./gradlew 2>/dev/null || true
 
-      - name: 🔨 Bumuo ng APK + KUNIN ANG ERROR
-        id: build-step
-        continue-on-error: true
-        shell: bash
+      - name: 🔨 Bumuo ng APK
+        id: build
         run: |
-          # Simulan at itala lahat sa docs/build-log.txt
           ./gradlew assembleDebug 2>&1 | tee docs/build-log.txt
           EXIT_CODE=${PIPESTATUS[0]}
-          
           if [ $EXIT_CODE -eq 0 ]; then
-            echo "✅ BUILD SUCCESS"
             echo "STATUS=SUCCESS" >> $GITHUB_ENV
+            echo "✅ BUILD SUCCESS"
           else
-            echo "❌ BUILD FAILED — Code: $EXIT_CODE"
             echo "STATUS=FAILED" >> $GITHUB_ENV
+            echo "❌ BUILD FAILED — Exit Code: $EXIT_CODE"
+            exit 1
           fi
 
-      - name: 📄 BUUIN ANG errors.html SA docs/ — WALANG ZIP!
+      - name: 📄 Gumawa ng errors.html — WALANG SYNTAX ERROR ✅
+        if: always()   # ✅ LAGING TATAKBO — KAHIT MAY ERROR
         run: |
+          # ✅ TAMA NA ANG SYNTAX — WALANG DOBLANG <<
           STATUS="${STATUS:-FAILED}"
-          LOG_FILE="docs/build-log.txt"
-          HTML_FILE="docs/errors.html"
+          LOG="docs/build-log.txt"
+          HTML="docs/errors.html"
 
-          # Simula ng HTML
-          cat > "$HTML_FILE" << 'HEAD'
+          # SIMULA NG HTML
+          cat > "$HTML" << 'EOFPAGE'
 <!DOCTYPE html>
 <html lang="tl">
 <head>
@@ -78,86 +78,82 @@ jobs:
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Build Status — WP Martodosko</title>
   <style>
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
-    body { background: #f0f2f5; padding: 20px; max-width: 900px; margin: 0 auto; }
-    .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
-    h1 { font-size: 22px; margin-bottom: 12px; }
-    .badge { display: inline-block; padding: 8px 22px; border-radius: 50px; color: white; font-weight: bold; font-size: 16px; }
-    .ok { background: #22c55e; }
-    .err { background: #ef4444; }
-    pre { background: #1e293b; color: #f8fafc; padding: 16px; border-radius: 8px; font-family: 'Courier New',monospace; font-size: 13px; line-height: 1.6; overflow-x: auto; white-space: pre-wrap; margin-top: 10px; }
-    .e-line { color: #fca5a5; background: #450a0a; padding: 2px 8px; border-radius: 4px; display: block; margin: 2px 0; }
-    .label { font-weight: 600; margin: 18px 0 8px; color: #374151; font-size: 15px; }
-    a { color: #3b82f6; text-decoration: none; }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+    body{background:#f0f2f5;padding:20px;max-width:900px;margin:0 auto}
+    .card{background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+    h1{font-size:22px;margin-bottom:12px}
+    .badge{display:inline-block;padding:8px 22px;border-radius:50px;color:#fff;font-weight:bold;font-size:16px}
+    .ok{background:#22c55e}
+    .err{background:#ef4444}
+    pre{background:#1e293b;color:#f8fafc;padding:16px;border-radius:8px;font:13px 'Courier New',monospace;line-height:1.6;overflow-x:auto;margin-top:10px}
+    .e-line{color:#fca5a5;background:#450a0a;padding:2px 8px;border-radius:4px;display:block;margin:2px 0}
+    .label{font-weight:600;margin:18px 0 8px;color:#374151}
   </style>
 </head>
 <body>
-HEAD
+EOFPAGE
 
+          # STATUS SECTION
           if [ "$STATUS" = "SUCCESS" ]; then
-            cat >> "$HTML_FILE" << <<ENDOK
+            cat >> "$HTML" << EOF
   <div class="card">
     <h1>✅ BUILD SUCCESS</h1>
     <span class="badge ok">MATAGUMPAY</span>
     <p class="label">Ang APK ay matagumpay na nabuo!</p>
   </div>
-ENDOK
+EOF
           else
-            cat >> "$HTML_FILE" << <<ENDERR
+            cat >> "$HTML" << EOF
   <div class="card">
     <h1>❌ BUILD FAILED</h1>
     <span class="badge err">NABIGO</span>
-    <p class="label">🔍 Mga nakitang Error (Eksaktong Linya):</p>
-ENDERR
-
-            # KUNIN ANG MGA LYNANG MAY ERROR — DIREKTANG KOPYA
-            echo "<pre>" >> "$HTML_FILE"
-            grep -n -i "error\|failed\|exception\|cannot\|unable\|command not found\|exit code" "$LOG_FILE" | head -35 | while IFS= read -r LINE; do
-              echo "<span class='e-line'>$LINE</span>" >> "$HTML_FILE"
+    <p class="label">🔍 Mga nakitang Error:</p>
+EOF
+            echo "<pre>" >> "$HTML"
+            grep -n -i "error\|failed\|exception\|cannot\|unable" "$LOG" 2>/dev/null | head -35 | while read -r L; do
+              echo "<span class='e-line'>$L</span>" >> "$HTML"
             done
-            echo "</pre>" >> "$HTML_FILE"
+            echo "</pre>" >> "$HTML"
 
-            # BUONG LOG
-            echo '<p class="label">📋 Buong Log:</p><pre>' >> "$HTML_FILE"
-            sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' "$LOG_FILE" >> "$HTML_FILE"
-            echo '</pre>' >> "$HTML_FILE"
+            echo '<p class="label">📋 Buong Log:</p><pre>' >> "$HTML"
+            sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' "$LOG" >> "$HTML"
+            echo '</pre>' >> "$HTML"
           fi
 
-          # TAPUSIN ANG HTML
-          cat >> "$HTML_FILE" << 'TAIL'
+          # TAPUSIN ANG PAGE
+          cat >> "$HTML" << 'EOFPAGE'
   <div class="card">
     <p class="label">📂 Lokasyon:</p>
-    <p>docs/errors.html — direkta sa iyong repo</p>
+    <p>docs/errors.html — direkta sa repo</p>
   </div>
 </body>
 </html>
-TAIL
+EOFPAGE
 
-          echo "✅ NAKASAVE SA: $HTML_FILE"
-          cat "$HTML_FILE" | head -20
+          echo "✅ NAISULAT: $HTML"
 
-      - name: 📤 I-commit ang errors.html at log sa GitHub
+      - name: 📤 I-commit ang docs/ sa GitHub
+        if: always()
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/errors.html docs/build-log.txt
-          git commit -m "📄 Update build status & errors" || echo "Walang bagong ilalagay"
+          git add docs/
+          git commit -m "📄 Update build status & errors" || true
           git push || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 📤 I-upload ang APK (KUNG SUCCESS LANG)
+      - name: 📤 I-upload ang APK
         if: env.STATUS == 'SUCCESS'
         uses: actions/upload-artifact@v4
         with:
           name: WP-Martodosko-v1.0
           path: app/build/outputs/apk/debug/app-debug.apk
 
-      - name: 🔗 IPAPAKITA ANG LINK — BUKASAN MO LANG!
+      - name: 🔗 Ipakita ang Link
+        if: always()
         run: |
           echo "================================================"
-          echo "📄 Buksan agad ang errors.html sa browser:"
+          echo "📄 Buksan agad:"
           echo "👉 https://github.com/${{ github.repository }}/blob/main/docs/errors.html"
           echo "================================================"
-
-      - name: ⛔ Itigil kung nabigo
-        if: env.STATUS == 'FAILED'
-        run: exit 1
