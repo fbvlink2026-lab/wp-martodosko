@@ -54,68 +54,48 @@ jobs:
           set -e
           if [ $EXIT_CODE -eq 0 ]; then
             echo "SUCCESS" > "$STATUS_FILE"
-            echo "BUILD SUCCESSFUL"
           else
             echo "FAILED" > "$STATUS_FILE"
-            echo "BUILD FAILED - Exit Code: $EXIT_CODE"
           fi
           echo "EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
 
       - name: Write errors.html
-        id: write-log
         if: always()
         run: |
           DATE=$(date "+%Y-%m-%d %H:%M:%S UTC")
-          STATUS_FILE="/tmp/build-status.txt"
-          LOG_FILE="/tmp/build-full.log"
           ASSETS_DIR="app/src/main/assets"
           TARGET_FILE="$ASSETS_DIR/errors.html"
           mkdir -p "$ASSETS_DIR"
-          rm -f "$TARGET_FILE"
-          if [ -f "$STATUS_FILE" ] && [ "$(cat $STATUS_FILE)" = "SUCCESS" ]; then
-            STATUS_DISPLAY="SUCCESS"
-            STATUS_DETAIL="APK built successfully"
-          else
-            STATUS_DISPLAY="FAILED"
-            STATUS_DETAIL="APK build failed - check log below"
-          fi
-          echo "<!DOCTYPE html><html><head><meta charset=utf-8><title>Build Result</title></head><body>" > "$TARGET_FILE"
-          echo "<h1>Build Result - WP Martodosko</h1>" >> "$TARGET_FILE"
-          echo "<p>Date: $DATE</p>" >> "$TARGET_FILE"
-          echo "<p>Status: $STATUS_DISPLAY</p>" >> "$TARGET_FILE"
-          echo "<p>Detail: $STATUS_DETAIL</p>" >> "$TARGET_FILE"
-          echo "<pre>" >> "$TARGET_FILE"
-          if [ -f "$LOG_FILE" ]; then cat "$LOG_FILE" >> "$TARGET_FILE"; fi
-          echo "</pre></body></html>" >> "$TARGET_FILE"
-          echo "errors.html written"
+          echo "<html><head><meta charset=utf-8><title>Build</title></head><body>" > "$TARGET_FILE"
+          echo "<h1>Build Result</h1><p>Date: $DATE</p>" >> "$TARGET_FILE"
+          echo "</body></html>" >> "$TARGET_FILE"
 
       # ==========================================
-      # 🛡️ PROTEKTAHAN ANG docs/wordpress — HINDI NA MABUBURA!
+      # 🛡️ HINDI NA MABUBURA ANG docs/wordpress!
       # ==========================================
-      - name: Copy assets to docs — KEEP wordpress SAFE
+      - name: Copy assets — KEEP docs/wordpress
         run: |
           ASSETS_DIR="app/src/main/assets"
           DOCS_DIR="./docs"
-          BACKUP_DIR="/tmp/wordpress-backup"
+          BACKUP="/tmp/wp-backup"
 
-          # 💾 I-BACKUP MUNA — SIGURADUHING LIGTAS
-          mkdir -p "$BACKUP_DIR"
+          # 💾 I-BACKUP MUNA
+          mkdir -p "$BACKUP"
           if [ -d "$DOCS_DIR/wordpress" ]; then
-            cp -R "$DOCS_DIR/wordpress" "$BACKUP_DIR/"
-            echo "BACKED UP: docs/wordpress"
+            cp -R "$DOCS_DIR/wordpress" "$BACKUP/"
           fi
 
-          # 🧹 Linisin docs/ — MALIBAN SA wordpress
+          # 🧹 LINIS — PERO HUWAG GALAWIN ANG wordpress
           find "$DOCS_DIR" -mindepth 1 -maxdepth 1 ! -name 'wordpress' -exec rm -rf {} + 2>/dev/null || true
           mkdir -p "$DOCS_DIR"
 
-          # 📤 Kopyahin assets
+          # 📤 KOPYAHIN ASSETS
           cp -R "$ASSETS_DIR"/. "$DOCS_DIR/" 2>/dev/null || true
 
-          # 🔄 IBALIK ANG wordpress — SIGURADO
-          if [ -d "$BACKUP_DIR/wordpress" ]; then
-            cp -R "$BACKUP_DIR/wordpress" "$DOCS_DIR/"
-            echo "RESTORED: docs/wordpress — NOT DELETED!"
+          # 🔄 IBALIK ANG wordpress
+          if [ -d "$BACKUP/wordpress" ]; then
+            cp -R "$BACKUP/wordpress" "$DOCS_DIR/"
+            echo "✅ RESTORED docs/wordpress"
           fi
 
           ls -la "$DOCS_DIR/"
@@ -147,7 +127,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add app/src/main/assets/ docs/
           if ! git diff --staged --quiet; then
-            git pull origin main --rebase 2>/dev/null || true
             git commit -m "Build: $(date +%Y-%m-%d %H:%M)"
             git push origin main
           fi
