@@ -12,15 +12,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        webView = findViewById(R.id.webView);  // ✅ TAMA ANG PANGALAN DITO!
-        
+        webView = findViewById(R.id.webView);
+
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
-        s.setAllowFileAccessFromFileURLs(true);
-        
-        webView.loadUrl("file:///android_asset/wordpress/index.html");
+
+        // ✅ KUKUNIN ANG LAMAN MULA SA GITHUB — WALANG NAKA-LOOB SA APK!
+        webView.loadUrl("https://raw.githubusercontent.com/fbvlink2026-lab/wp-martodosko/main/docs/index.html");
     }
 
     @Override
