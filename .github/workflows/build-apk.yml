@@ -11,6 +11,9 @@ jobs:
       - name: 📥 Kunin ang Code
         uses: actions/checkout@v4
 
+      - name: 📁 Gumawa ng docs folder
+        run: mkdir -p docs
+
       - name: ☕ I-setup ang Java
         uses: actions/setup-java@v4
         with:
@@ -43,11 +46,118 @@ jobs:
       - name: Siguraduhing Pwede ang gradlew
         run: chmod +x ./gradlew 2>/dev/null || true
 
-      - name: 🔨 Bumuo ng APK
-        run: ./gradlew assembleDebug
+      - name: 🔨 Bumuo ng APK + KUNIN ANG ERROR
+        id: build-step
+        continue-on-error: true
+        shell: bash
+        run: |
+          # Simulan at itala lahat sa docs/build-log.txt
+          ./gradlew assembleDebug 2>&1 | tee docs/build-log.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+          
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ BUILD SUCCESS"
+            echo "STATUS=SUCCESS" >> $GITHUB_ENV
+          else
+            echo "❌ BUILD FAILED — Code: $EXIT_CODE"
+            echo "STATUS=FAILED" >> $GITHUB_ENV
+          fi
 
-      - name: 📤 I-upload ang APK
+      - name: 📄 BUUIN ANG errors.html SA docs/ — WALANG ZIP!
+        run: |
+          STATUS="${STATUS:-FAILED}"
+          LOG_FILE="docs/build-log.txt"
+          HTML_FILE="docs/errors.html"
+
+          # Simula ng HTML
+          cat > "$HTML_FILE" << 'HEAD'
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build Status — WP Martodosko</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+    body { background: #f0f2f5; padding: 20px; max-width: 900px; margin: 0 auto; }
+    .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    h1 { font-size: 22px; margin-bottom: 12px; }
+    .badge { display: inline-block; padding: 8px 22px; border-radius: 50px; color: white; font-weight: bold; font-size: 16px; }
+    .ok { background: #22c55e; }
+    .err { background: #ef4444; }
+    pre { background: #1e293b; color: #f8fafc; padding: 16px; border-radius: 8px; font-family: 'Courier New',monospace; font-size: 13px; line-height: 1.6; overflow-x: auto; white-space: pre-wrap; margin-top: 10px; }
+    .e-line { color: #fca5a5; background: #450a0a; padding: 2px 8px; border-radius: 4px; display: block; margin: 2px 0; }
+    .label { font-weight: 600; margin: 18px 0 8px; color: #374151; font-size: 15px; }
+    a { color: #3b82f6; text-decoration: none; }
+  </style>
+</head>
+<body>
+HEAD
+
+          if [ "$STATUS" = "SUCCESS" ]; then
+            cat >> "$HTML_FILE" << <<ENDOK
+  <div class="card">
+    <h1>✅ BUILD SUCCESS</h1>
+    <span class="badge ok">MATAGUMPAY</span>
+    <p class="label">Ang APK ay matagumpay na nabuo!</p>
+  </div>
+ENDOK
+          else
+            cat >> "$HTML_FILE" << <<ENDERR
+  <div class="card">
+    <h1>❌ BUILD FAILED</h1>
+    <span class="badge err">NABIGO</span>
+    <p class="label">🔍 Mga nakitang Error (Eksaktong Linya):</p>
+ENDERR
+
+            # KUNIN ANG MGA LYNANG MAY ERROR — DIREKTANG KOPYA
+            echo "<pre>" >> "$HTML_FILE"
+            grep -n -i "error\|failed\|exception\|cannot\|unable\|command not found\|exit code" "$LOG_FILE" | head -35 | while IFS= read -r LINE; do
+              echo "<span class='e-line'>$LINE</span>" >> "$HTML_FILE"
+            done
+            echo "</pre>" >> "$HTML_FILE"
+
+            # BUONG LOG
+            echo '<p class="label">📋 Buong Log:</p><pre>' >> "$HTML_FILE"
+            sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' "$LOG_FILE" >> "$HTML_FILE"
+            echo '</pre>' >> "$HTML_FILE"
+          fi
+
+          # TAPUSIN ANG HTML
+          cat >> "$HTML_FILE" << 'TAIL'
+  <div class="card">
+    <p class="label">📂 Lokasyon:</p>
+    <p>docs/errors.html — direkta sa iyong repo</p>
+  </div>
+</body>
+</html>
+TAIL
+
+          echo "✅ NAKASAVE SA: $HTML_FILE"
+          cat "$HTML_FILE" | head -20
+
+      - name: 📤 I-commit ang errors.html at log sa GitHub
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/errors.html docs/build-log.txt
+          git commit -m "📄 Update build status & errors" || echo "Walang bagong ilalagay"
+          git push || true
+
+      - name: 📤 I-upload ang APK (KUNG SUCCESS LANG)
+        if: env.STATUS == 'SUCCESS'
         uses: actions/upload-artifact@v4
         with:
           name: WP-Martodosko-v1.0
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: 🔗 IPAPAKITA ANG LINK — BUKASAN MO LANG!
+        run: |
+          echo "================================================"
+          echo "📄 Buksan agad ang errors.html sa browser:"
+          echo "👉 https://github.com/${{ github.repository }}/blob/main/docs/errors.html"
+          echo "================================================"
+
+      - name: ⛔ Itigil kung nabigo
+        if: env.STATUS == 'FAILED'
+        run: exit 1
