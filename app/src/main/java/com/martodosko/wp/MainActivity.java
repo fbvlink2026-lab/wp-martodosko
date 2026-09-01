@@ -12,11 +12,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        webView = findViewById(R.id.webview);
+        webView = findViewById(R.id.webView);  // ✅ TAMA ANG PANGALAN DITO!
+        
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
+        s.setAllowFileAccessFromFileURLs(true);
+        
         webView.loadUrl("file:///android_asset/wordpress/index.html");
     }
 
