@@ -18,63 +18,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # ==============================================
-      # 🆕 HAKBANG A — I-download ang WordPress → assets/wordpress
-      # ==============================================
-      - name: 📦 Ihanda ang WordPress sa assets/
-        run: |
-          ASSETS_DIR="app/src/main/assets/wordpress"
-          mkdir -p "$ASSETS_DIR"
-          echo "📥 Dinadownload ang WordPress..."
-          wget -q https://wordpress.org/latest.zip -O /tmp/wp.zip
-          unzip -q /tmp/wp.zip -d /tmp
-          echo "📂 Kinokopya papunta sa assets/wordpress..."
-          cp -r /tmp/wordpress/* "$ASSETS_DIR"/
-          echo "✅ WordPress nakalagay — $(ls -1 "$ASSETS_DIR" | wc -l) files/folders"
-
-      # ==============================================
-      # 🆕 HAKBANG B — I-update ang MainActivity → buksan lokal na WordPress
-      # ==============================================
-      - name: 📄 I-update ang MainActivity — binabasa mula sa assets
-        run: |
-          DST="app/src/main/java/com/martodosko/wp/MainActivity.java"
-          mkdir -p "$(dirname "$DST")"
-          cat > "$DST" << 'JAVA'
-package com.martodosko.wp;
-
-import android.os.Bundle;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import androidx.appcompat.app.AppCompatActivity;
-
-public class MainActivity extends AppCompatActivity {
-    private WebView webView;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        webView = findViewById(R.id.webview);
-        WebSettings s = webView.getSettings();
-        s.setJavaScriptEnabled(true);
-        s.setDomStorageEnabled(true);
-        s.setAllowFileAccess(true);
-        webView.loadUrl("file:///android_asset/wordpress/index.html");
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
-    }
-}
-JAVA
-          echo "✅ MainActivity updated — binabasa mula sa assets/wordpress"
-
-      # ==============================================
-      # ⬇️ MULA DITO — GANOON PA RIN, WALANG BINAGO! ⬇️
-      # ==============================================
-
+      # ⚡ KUNG MAYROON NANG gradlew — DERETSO NA LANG
       - name: ⚡ Check Gradle Wrapper
         id: wrapper-check
         run: |
@@ -98,24 +42,34 @@ JAVA
       - name: Siguraduhing Pwede ang gradlew
         run: chmod +x ./gradlew 2>/dev/null || true
 
+      # ==========================================
+      # 🔨 HAKBANG 1 — BUUIN ANG APK ✅ ITUTULOY KAHIT MAY ERROR PARA MAKOPYA ANG ASSETS
+      # ==========================================
       - name: 🔨 Buuin ang APK
         id: build-step
         run: |
           mkdir -p /tmp
           LOG_FILE="/tmp/build-full.log"
           STATUS_FILE="/tmp/build-status.txt"
+
           set +e
           ./gradlew assembleDebug > "$LOG_FILE" 2>&1
           EXIT_CODE=$?
           set -e
+
           if [ $EXIT_CODE -eq 0 ]; then
             echo "SUCCESS" > "$STATUS_FILE"
+            echo "✅ BUILD SUCCESSFUL"
           else
             echo "FAILED" > "$STATUS_FILE"
+            echo "❌ BUILD FAILED — Exit Code: $EXIT_CODE"
           fi
           echo "EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
 
-      - name: 📄 Burahin Luma → Isulat BAGONG errors.html
+      # ==========================================
+      # 📄 HAKBANG 2 — BURAHIN → ISULAT BAGONG errors.html ✅ LAGING GAGANA
+      # ==========================================
+      - name: 📄 Burahin Luma → Isulat BAGONG errors.html sa assets/
         id: write-log
         if: always()
         run: |
@@ -124,15 +78,24 @@ JAVA
           LOG_FILE="/tmp/build-full.log"
           ASSETS_DIR="app/src/main/assets"
           TARGET_FILE="$ASSETS_DIR/errors.html"
+
           mkdir -p "$ASSETS_DIR"
-          [ -f "$TARGET_FILE" ] && rm -f "$TARGET_FILE"
-          if [ -f "$STATUS_FILE" ] && [ "$(cat "$STATUS_FILE")" = "SUCCESS" ]; then
+
+          # ✅ BURAHIN MUNA — SIGURADONG MAY PAGBABAGO
+          if [ -f "$TARGET_FILE" ]; then
+            rm -f "$TARGET_FILE"
+            echo "🗑️ BINURA ANG LUMANG errors.html"
+          fi
+
+          if [ -f "$STATUS_FILE" ] && [ "$(cat $STATUS_FILE)" = "SUCCESS" ]; then
             STATUS_DISPLAY="✅ TAGUMPAY"
-            STATUS_DETAIL="Matagumpay na nabuo — may WordPress na sa loob!"
+            STATUS_DETAIL="Matagumpay na nabuo ang WP Martodosko APK"
           else
             STATUS_DISPLAY="❌ NABIGO"
-            STATUS_DETAIL="Hindi nabuo ang APK"
+            STATUS_DETAIL="Hindi nabuo ang APK — tingnan ang log sa ibaba"
           fi
+
+          # ✅ ISULAT ANG BAGONG FILE
           {
             echo "# 📋 Talaan ng Pagbuo — WP Martodosko"
             echo ""
@@ -144,33 +107,74 @@ JAVA
             echo ""
             echo "## 📋 Buong Log ng Pagbuo"
             echo "\`\`\`"
-            [ -f "$LOG_FILE" ] && cat "$LOG_FILE" || echo "(Walang log)"
+            if [ -f "$LOG_FILE" ]; then
+              cat "$LOG_FILE"
+            else
+              echo "(Walang nakuhang log)"
+            fi
             echo "\`\`\`"
             echo ""
             echo "---"
             echo "✅ **Katapusan ng Talaan**"
           } > "$TARGET_FILE"
 
+          echo "✅ BAGONG errors.html NAISULAT SA: $TARGET_FILE"
+
+      # ==========================================
+      # 📤 HAKBANG 3 — KOPYAHIN BUONG assets/ → docs/ ✅ LAGING GAGANA
+      # ==========================================
       - name: 📤 Kopyahin BUONG Assets papunta sa /docs
         run: |
           ASSETS_DIR="app/src/main/assets"
           DOCS_DIR="./docs"
+
+          echo "=== 📂 LAMAN NG assets/ BAGO KOPYAHIN ==="
+          ls -la "$ASSETS_DIR"
+          echo ""
+
+          echo "=== ✅ BURAHIN BUONG docs/ ==="
           rm -rf "$DOCS_DIR"
           mkdir -p "$DOCS_DIR"
+
+          echo "=== 📤 KOPYAHIN BUONG assets/ → docs/ ==="
           cp -R "$ASSETS_DIR"/. "$DOCS_DIR/"
 
+          echo ""
+          echo "=== ✅ LAMAN NG docs/ ==="
+          ls -la "$DOCS_DIR"
+
+          if [ -f "$DOCS_DIR/errors.html" ]; then
+            echo "✅✅✅ BAGONG errors.html NAKOPYA — SIGURADO!"
+          fi
+
+      # ==========================================
+      # 📤 HAKBANG 4 — ILAGAY ANG APK SA docs/ ✅ KUNG MAYROON
+      # ==========================================
       - name: 📤 Hanapin at Ihanda ang APK
         id: apk-step
         run: |
           APK_FILE=$(find . -name "app-debug.apk" -path "*/build/*" | head -1)
+
           if [ -n "$APK_FILE" ] && [ -f "$APK_FILE" ]; then
+            APK_SIZE=$(du -h "$APK_FILE" | cut -f1)
+            APK_SIZE_BYTES=$(stat -c%s "$APK_FILE")
             NEW_NAME="WP-Martodosko-v1.0.apk"
+
             cp "$APK_FILE" "docs/$NEW_NAME"
+
+            echo "✅ APK MATAGPUAN: docs/$NEW_NAME"
             echo "APK_FOUND=true" >> $GITHUB_ENV
+            echo "APK_SIZE=$APK_SIZE" >> $GITHUB_ENV
+            echo "APK_PATH=docs/$NEW_NAME" >> $GITHUB_ENV
+            echo "APK_NAME=$NEW_NAME" >> $GITHUB_ENV
           else
+            echo "❌ HINDI MATAGPUAN ANG APK"
             echo "APK_FOUND=false" >> $GITHUB_ENV
           fi
 
+      # ==========================================
+      # ✅ I-UPLOAD ANG APK ✅ KUNG MAYROON
+      # ==========================================
       - name: 📤 I-upload ang APK
         if: env.APK_FOUND == 'true'
         uses: actions/upload-artifact@v4
@@ -179,27 +183,39 @@ JAVA
           path: docs/*.apk
           retention-days: 30
 
+      # ==========================================
+      # ✅ I-COMMIT — LAGING GAGANA ✅ KAHIT WALANG APK
+      # ==========================================
       - name: ✅ I-commit at I-push ang LAHAT
         if: always()
         continue-on-error: true
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add app/src/main/assets/ docs/ 2>/dev/null || true
-          if ! git diff --staged --quiet; then
-            git commit -m "📋 Build: WordPress in assets" || true
-            git push || true
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+          git add app/src/main/assets/ docs/ 2>/dev/null || true
+
+          if git diff --staged --quiet; then
+            echo "ℹ️ WALANG PAGBABAGO"
+          else
+            git commit -m "📋 Build Result: $(date +%Y-%m-%d %H:%M)"
+            echo "📤 IPINAPADALA..."
+            git push || git push --force
+            echo "✅ MATAGUMPAY — SABAY-SABAY ANG LAHAT!"
+          fi
+
+      # ==========================================
+      # ✅ KONKLUSYON ✅ NGAYON — PULA ❌ KUNG WALANG APK!
+      # ==========================================
       - name: ✅ Resulta ng Pagbuo
         id: final-result
         if: always()
         run: |
           if [ "${{ env.APK_FOUND }}" = "true" ]; then
+            echo "✅ TAGUMPAY — May APK, nakopya ang assets"
             echo "STATUS=SUCCESS" >> $GITHUB_OUTPUT
           else
+            echo "❌ NABIGO — WALANG APK DAHIL MAY ERROR SA BUILD"
             echo "STATUS=FAILED" >> $GITHUB_OUTPUT
             exit 1
           fi
