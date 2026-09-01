@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kategorya — WP Martodosko</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header id="header">
+    <div class="container">
+      <a href="index.html" style="text-decoration:none; color:white;"><h1>🌐 WP Martodosko</h1></a>
+      <nav id="main-nav"></nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="category-content">
+      <div class="loading">⏳ Kinukuha ang kategorya...</div>
+    </div>
+  </main>
+
+  <footer id="footer">
+    <p>&copy; 2026 WP Martodosko</p>
+  </footer>
+
+  <script src="js/database.js"></script>
+  <script>
+    loadDatabase(function(db) {
+      renderMenu(db.menus.main);
+      const slug = getParam('slug');
+      const cat = db.categories.find(c => c.slug === slug);
+      const posts = db.posts.filter(p => p.category === (cat?.name || ''));
+      const container = document.getElementById('category-content');
+      if (cat) {
+        container.innerHTML = `<h2 style="margin-bottom:20px;">📂 Kategorya: ${cat.name}</h2>`;
+        if (posts.length) renderPosts(posts, container);
+        else container.innerHTML += '<p>Wala pang artikulo dito.</p>';
+      } else {
+        container.innerHTML = '<p>❌ Hindi matagpuan ang kategorya.</p>';
+      }
+    });
+  </script>
+</body>
+</html>

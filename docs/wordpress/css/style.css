@@ -1,0 +1,21 @@
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+body { background: #f5f7fa; color: #333; line-height: 1.6; }
+.container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+header { background: linear-gradient(135deg, #007cba, #005a87); color: white; padding: 25px 0; margin-bottom: 30px; }
+header .container { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; }
+header h1 { font-size: 22px; margin-bottom: 10px; }
+nav a { color: white; margin: 0 12px; text-decoration: none; font-weight: 500; }
+nav a:hover { text-decoration: underline; }
+.loading { text-align: center; padding: 50px; color: #666; font-size: 18px; }
+.post-card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+.post-card h2 { color: #1a1a1a; margin-bottom: 8px; font-size: 20px; }
+.post-card h2 a { color: inherit; text-decoration: none; }
+.post-card .meta { color: #777; font-size: 14px; margin-bottom: 12px; }
+.post-card p { color: #444; font-size: 16px; }
+.single-post { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+.single-post h2 { font-size: 26px; margin-bottom: 10px; color: #1a1a1a; }
+.single-post .meta { color: #777; padding-bottom: 15px; border-bottom: 1px solid #eee; margin-bottom: 20px; }
+.single-post .the-content { font-size: 17px; line-height: 1.8; color: #333; }
+.single-post .the-content p { margin-bottom: 15px; }
+footer { text-align: center; padding: 25px; color: #777; font-size: 14px; margin-top: 40px; }
+a { color: #007cba; }

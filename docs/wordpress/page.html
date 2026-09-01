@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pahina — WP Martodosko</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header id="header">
+    <div class="container">
+      <a href="index.html" style="text-decoration:none; color:white;"><h1>🌐 WP Martodosko</h1></a>
+      <nav id="main-nav"></nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="page-content">
+      <div class="loading">⏳ Kinukuha ang pahina...</div>
+    </div>
+  </main>
+
+  <footer id="footer">
+    <p>&copy; 2026 WP Martodosko</p>
+  </footer>
+
+  <script src="js/database.js"></script>
+  <script>
+    loadDatabase(function(db) {
+      renderMenu(db.menus.main);
+      const slug = getParam('slug');
+      const page = db.pages.find(p => p.slug === slug);
+      const container = document.getElementById('page-content');
+      if (page) {
+        container.innerHTML = `
+          <article class="single-post">
+            <h2>${page.title}</h2>
+            <div class="the-content">${page.content}</div>
+            <p style="margin-top:20px;"><a href="index.html">← Bumalik sa Tahanan</a></p>
+          </article>
+        `;
+        document.title = page.title + ' — WP Martodosko';
+      } else {
+        container.innerHTML = '<p>❌ Hindi matagpuan ang pahina.</p>';
+      }
+    });
+  </script>
+</body>
+</html>

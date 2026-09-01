@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artikulo — WP Martodosko</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header id="header">
+    <div class="container">
+      <a href="index.html" style="text-decoration:none; color:white;"><h1>🌐 WP Martodosko</h1></a>
+      <nav id="main-nav"></nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="post-content">
+      <div class="loading">⏳ Kinukuha ang artikulo...</div>
+    </div>
+  </main>
+
+  <footer id="footer">
+    <p>&copy; 2026 WP Martodosko</p>
+  </footer>
+
+  <script src="js/database.js"></script>
+  <script>
+    loadDatabase(function(db) {
+      renderMenu(db.menus.main);
+      const slug = getParam('slug');
+      const post = db.posts.find(p => p.slug === slug);
+      const container = document.getElementById('post-content');
+      if (post) {
+        container.innerHTML = `
+          <article class="single-post">
+            <h2>${post.title}</h2>
+            <div class="meta">📅 ${post.date} | ✍️ ${post.author} | 📂 ${post.category}</div>
+            <div class="the-content">${post.content}</div>
+            <p style="margin-top:20px;"><a href="index.html">← Bumalik sa Tahanan</a></p>
+          </article>
+        `;
+        document.title = post.title + ' — WP Martodosko';
+      } else {
+        container.innerHTML = '<p>❌ Hindi matagpuan ang artikulo.</p>';
+      }
+    });
+  </script>
+</body>
+</html>
