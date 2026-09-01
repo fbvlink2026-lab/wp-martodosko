@@ -79,51 +79,56 @@ jobs:
             STATUS_DISPLAY="FAILED"
             STATUS_DETAIL="APK build failed - check log below"
           fi
-          cat > "$TARGET_FILE" << HTMLEND
-<!DOCTYPE html>
-<html>
-<head><meta charset=utf-8><title>Build Result</title></head>
-<body>
-<h1>Build Result - WP Martodosko</h1>
-<p>Date: $DATE</p>
-<p>Status: $STATUS_DISPLAY</p>
-<p>Detail: $STATUS_DETAIL</p>
-<pre>
-HTMLEND
-          if [ -f "$LOG_FILE" ]; then cat "$LOG_FILE"; fi
+          echo "<!DOCTYPE html><html><head><meta charset=utf-8><title>Build Result</title></head><body>" > "$TARGET_FILE"
+          echo "<h1>Build Result - WP Martodosko</h1>" >> "$TARGET_FILE"
+          echo "<p>Date: $DATE</p>" >> "$TARGET_FILE"
+          echo "<p>Status: $STATUS_DISPLAY</p>" >> "$TARGET_FILE"
+          echo "<p>Detail: $STATUS_DETAIL</p>" >> "$TARGET_FILE"
+          echo "<pre>" >> "$TARGET_FILE"
+          if [ -f "$LOG_FILE" ]; then cat "$LOG_FILE" >> "$TARGET_FILE"; fi
           echo "</pre></body></html>" >> "$TARGET_FILE"
-          echo "errors.html written successfully"
+          echo "errors.html written"
 
-      - name: Copy assets to docs - KEEP wordpress
+      # ==========================================
+      # 🛡️ PROTEKTAHAN ANG docs/wordpress — HINDI NA MABUBURA!
+      # ==========================================
+      - name: Copy assets to docs — KEEP wordpress SAFE
         run: |
           ASSETS_DIR="app/src/main/assets"
           DOCS_DIR="./docs"
-          TEMP_DIR="/tmp/docs-backup"
-          mkdir -p "$TEMP_DIR"
+          BACKUP_DIR="/tmp/wordpress-backup"
+
+          # 💾 I-BACKUP MUNA — SIGURADUHING LIGTAS
+          mkdir -p "$BACKUP_DIR"
           if [ -d "$DOCS_DIR/wordpress" ]; then
-            cp -R "$DOCS_DIR/wordpress" "$TEMP_DIR/"
-            echo "Backed up wordpress folder"
+            cp -R "$DOCS_DIR/wordpress" "$BACKUP_DIR/"
+            echo "BACKED UP: docs/wordpress"
           fi
-          rm -rf "$DOCS_DIR"
+
+          # 🧹 Linisin docs/ — MALIBAN SA wordpress
+          find "$DOCS_DIR" -mindepth 1 -maxdepth 1 ! -name 'wordpress' -exec rm -rf {} + 2>/dev/null || true
           mkdir -p "$DOCS_DIR"
+
+          # 📤 Kopyahin assets
           cp -R "$ASSETS_DIR"/. "$DOCS_DIR/" 2>/dev/null || true
-          if [ -d "$TEMP_DIR/wordpress" ]; then
-            cp -R "$TEMP_DIR/wordpress" "$DOCS_DIR/"
-            echo "Restored wordpress folder"
+
+          # 🔄 IBALIK ANG wordpress — SIGURADO
+          if [ -d "$BACKUP_DIR/wordpress" ]; then
+            cp -R "$BACKUP_DIR/wordpress" "$DOCS_DIR/"
+            echo "RESTORED: docs/wordpress — NOT DELETED!"
           fi
+
           ls -la "$DOCS_DIR/"
 
-      - name: Find and prepare APK
+      - name: Find APK
         id: apk-step
         run: |
           APK_FILE=$(find . -name "app-debug.apk" -path "*/build/*" | head -1)
           if [ -n "$APK_FILE" ] && [ -f "$APK_FILE" ]; then
             cp "$APK_FILE" "docs/WP-Martodosko-v1.0.apk"
             echo "APK_FOUND=true" >> $GITHUB_ENV
-            echo "APK prepared"
           else
             echo "APK_FOUND=false" >> $GITHUB_ENV
-            echo "APK NOT FOUND"
           fi
 
       - name: Upload APK
@@ -134,7 +139,7 @@ HTMLEND
           path: docs/*.apk
           retention-days: 30
 
-      - name: Commit and Push
+      - name: Commit & Push
         if: always()
         continue-on-error: true
         run: |
@@ -142,11 +147,12 @@ HTMLEND
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add app/src/main/assets/ docs/
           if ! git diff --staged --quiet; then
-            git commit -m "Build Result: $(date +%Y-%m-%d %H:%M)"
-            git push
+            git pull origin main --rebase 2>/dev/null || true
+            git commit -m "Build: $(date +%Y-%m-%d %H:%M)"
+            git push origin main
           fi
 
-      - name: Final Result
+      - name: Final Status
         id: final-result
         if: always()
         run: |
