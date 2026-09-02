@@ -66,37 +66,34 @@ jobs:
           ASSETS_DIR="app/src/main/assets"
           TARGET_FILE="$ASSETS_DIR/errors.html"
           mkdir -p "$ASSETS_DIR"
-          echo "<html><head><meta charset=utf-8><title>Build</title></head><body>" > "$TARGET_FILE"
+          echo "<html><head><meta charset=utf-8><title>Build Result</title></head><body>" > "$TARGET_FILE"
           echo "<h1>Build Result</h1><p>Date: $DATE</p>" >> "$TARGET_FILE"
+          echo "<p>Status: ${{ steps.build-step.outcome }}</p>" >> "$TARGET_FILE"
           echo "</body></html>" >> "$TARGET_FILE"
 
-      # ==========================================
-      # 🛡️ HINDI NA MABUBURA ANG docs/wordpress!
-      # ==========================================
-      - name: Copy assets — KEEP docs/wordpress
+      # ==========================================================
+      # 🛡️  PINAKA MAHALAGA: HINDI MABUBURA ANG docs/ — LAHAT LIGTAS!
+      # ==========================================================
+      - name: 🛡️ PROTECT — Kopyahin APK lang, HINDI BURAHIN ANG docs/
         run: |
           ASSETS_DIR="app/src/main/assets"
           DOCS_DIR="./docs"
-          BACKUP="/tmp/wp-backup"
+          BACKUP="/tmp/docs-FULL-backup"
 
-          # 💾 I-BACKUP MUNA
+          # 💾 I-BACKUP ANG BUONG docs/ — LAHAT!
           mkdir -p "$BACKUP"
-          if [ -d "$DOCS_DIR/wordpress" ]; then
-            cp -R "$DOCS_DIR/wordpress" "$BACKUP/"
-          fi
+          cp -R "$DOCS_DIR"/. "$BACKUP/"
+          echo "✅ NAI-BACKUP ANG BUONG docs/ — WALANG MAWALA!"
 
-          # 🧹 LINIS — PERO HUWAG GALAWIN ANG wordpress
-          find "$DOCS_DIR" -mindepth 1 -maxdepth 1 ! -name 'wordpress' -exec rm -rf {} + 2>/dev/null || true
-          mkdir -p "$DOCS_DIR"
+          # 🧹 HUWAG BURAHIN — KOPYAHIN LANG ANG KAILANGAN!
+          # ✅ APK lang ang ilalagay — HINDI GAGALAWIN ANG IBA PANG FILE SA docs/
 
-          # 📤 KOPYAHIN ASSETS
-          cp -R "$ASSETS_DIR"/. "$DOCS_DIR/" 2>/dev/null || true
+          # 📤 KOPYAHIN ANG errors.html MULA ASSETS → docs/
+          cp "$ASSETS_DIR/errors.html" "$DOCS_DIR/" 2>/dev/null || true
 
-          # 🔄 IBALIK ANG wordpress
-          if [ -d "$BACKUP/wordpress" ]; then
-            cp -R "$BACKUP/wordpress" "$DOCS_DIR/"
-            echo "✅ RESTORED docs/wordpress"
-          fi
+          # 🔄 IBALIK ANG LAHAT MULA SA BACKUP — SIGURADONG WALANG NABURA!
+          cp -R "$BACKUP"/. "$DOCS_DIR/"
+          echo "✅ LAHAT SA docs/ — NABALIK AT HINDI NABURA!"
 
           ls -la "$DOCS_DIR/"
 
@@ -106,8 +103,10 @@ jobs:
           APK_FILE=$(find . -name "app-debug.apk" -path "*/build/*" | head -1)
           if [ -n "$APK_FILE" ] && [ -f "$APK_FILE" ]; then
             cp "$APK_FILE" "docs/WP-Martodosko-v1.0.apk"
+            echo "✅ APK inilagay sa docs/"
             echo "APK_FOUND=true" >> $GITHUB_ENV
           else
+            echo "❌ APK hindi matagpuan"
             echo "APK_FOUND=false" >> $GITHUB_ENV
           fi
 
