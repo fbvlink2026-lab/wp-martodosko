@@ -1,8 +1,8 @@
 // =========================================================
-// 🧠 WP MARTODOSKO — KUMPLETONG LOGIC.JS
-// ✅ MALINIS: WALANG DOBLE NA SIDEBAR/TOGGLE/SWIPE CODE
-// ✅ ANG SIDEBAR → NAKA-SARILI SA sidebar.html — HINDI BANGGA
-// ✅ INAYOS: Pangalan ng function + tawag sa loadPage
+// 🧠 WP MARTODOSKO — KUMPLETONG INAYOS NA LOGIC.JS
+// ✅ LAHAT NG FUNCTIONS NASA LOOB — WALANG HIHINTAYIN
+// ✅ loadPage + runScriptsIn — NANDITO NA RIN!
+// ✅ Cache-busting — laging bago ang pahina
 // =========================================================
 
 // ✅ NAKA-TABI — GINAGAMIT NG ENCRYPTION
@@ -62,7 +62,7 @@ function iSimulanSessionCountdown(elId = 'session-timer') {
     if (oras <= 0 && minuto <= 0) {
       el.textContent = '❌ Nag-expire na';
       iTapusinAngSession();
-      if (typeof window.loadPage === 'function') window.loadPage('login');
+      window.loadPage?.('login');
       return;
     }
     el.textContent = `${oras}h ${minuto}m natitira`;
@@ -74,6 +74,47 @@ function iSimulanSessionCountdown(elId = 'session-timer') {
 function iPalawiginSession() {
   localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
   alert('✅ Pinalawig pa ng 2 oras ang sesyon!');
+}
+
+// =========================================================
+// 📄 PAHINA PAGKARGA — NASA LOOB NA! HINDI NA HIHINTAYIN!
+// =========================================================
+window.loadPage = async function loadPage(pageId) {
+  document.querySelectorAll('.menu-item').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === pageId);
+  });
+  currentPage = pageId;
+
+  const area = document.getElementById('page-content');
+  if (!area) return;
+
+  area.innerHTML = `<div style="padding:40px;text-align:center;"><p>⏳ Binabasa: ${pageId}...</p></div>`;
+
+  try {
+    // ✅ LAGING BAGO — WALANG CACHE!
+    const res = await fetch(`content/${pageId}.html?v=${Date.now()}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+    });
+    if (!res.ok) throw new Error(`Hindi mabasa: ${pageId}`);
+    area.innerHTML = await res.text();
+    runScriptsIn(area);
+    document.title = pageId.charAt(0).toUpperCase() + pageId.slice(1) + ' — WP Martodosko';
+  } catch (err) {
+    area.innerHTML = `<div style="padding:25px;text-align:center;border-left:4px solid #d63638;background:#fbeaea;margin:15px;border-radius:4px;">
+      <h3 style="color:#d63638;margin:0 0 8px 0;">❌ Hindi Mabuksan</h3>
+      <p style="margin:0;">${err.message}</p>
+    </div>`;
+  }
+};
+
+function runScriptsIn(container) {
+  container.querySelectorAll('script').forEach(luma => {
+    const bago = document.createElement('script');
+    bago.textContent = luma.textContent;
+    Array.from(luma.attributes).forEach(a => bago.setAttribute(a.name, a.value));
+    luma.parentNode.replaceChild(bago, luma);
+  });
 }
 
 // =========================================================
@@ -369,7 +410,7 @@ window.clearAllCredentials = function() {
   localStorage.removeItem('wp_offline_queue');
   updateUserStatusDisplay();
   updateSyncBadge();
-  if (typeof window.loadPage === 'function') window.loadPage('login');
+  window.loadPage?.('login');
   alert('✅ BINURA NA');
 };
 
@@ -396,4 +437,4 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(renderSidebarMenu, 50);
 });
 
-console.log('✅ WP Martodosko — logic.js HANDA NA — TUGMA NA SA LAHAT!');
+console.log('✅ WP Martodosko — logic.js KUMPLETO NA — LAHAT NG FUNCTIONS NASA LOOB!');
