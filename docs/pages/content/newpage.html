@@ -1,0 +1,39 @@
+<h1>➕ Gumawa ng Bagong Pahina</h1>
+<div class="card">
+  <table>
+    <tr><th style="width:200px;">Pangalan ng File:</th><td><input type="text" id="nf" placeholder="hal. tungkol-sa-atin"> .html</td></tr>
+    <tr><th>Pamagat ng Pahina:</th><td><input type="text" id="nt" placeholder="Hal. Tungkol sa Atin"></td></tr>
+    <tr><th>Icon sa Menu:</th><td><input type="text" id="ni" value="📄" style="width:60px;text-align:center;"></td></tr>
+  </table>
+</div>
+<div class="card">
+  <h3>Paunang Laman</h3>
+  <textarea id="nc" style="width:100%;min-height:180px;padding:12px;border:1px solid #c3c4c7;border-radius:4px;font-family:Consolas,monospace;">
+<h1>Pamagat ng Pahina</h1>
+<div class="card">
+  <p>Ito ang iyong bagong pahina. Palitan ang laman na ito.</p>
+</div>
+  </textarea>
+</div>
+<button onclick="gumawaPahina()">📂 Gumawa at I-download</button>
+<div id="resultado" style="margin-top:20px;"></div>
+
+<script>
+function gumawaPahina(){
+  const fn=document.getElementById('nf').value.trim(),t=document.getElementById('nt').value.trim()||fn,i=document.getElementById('ni').value||'📄',c=document.getElementById('nc').value;
+  if(!fn)return alert('❌ Ilagay ang pangalan ng file!');
+  if(!/^[a-z0-9-]+$/.test(fn))return alert('❌ Maliit na titik, numero, at gitling (-) lang!');
+  const html=`<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <title>${t} — WP Martodosko</title>
+</head>
+<body>
+${c}
+</body>
+</html>`;
+  const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=fn+'.html';a.click();URL.revokeObjectURL(u);
+  document.getElementById('resultado').innerHTML=`<div class="card" style="border-left:4px solid #00a32a;background:#f0fcf4;"><h3>✅ Bagong Pahina Nalikha!</h3><p><strong>File:</strong> ${fn}.html → I-upload sa <code>docs/pages/content/</code> sa GitHub</p><p><strong>Idagdag sa Menu:</strong> Pumunta sa 🛠️ Organizer → Idagdag ang pindutan</p></div>`;
+}
+</script>

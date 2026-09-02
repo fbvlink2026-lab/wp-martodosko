@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wp-martodosko version="1.0.0">
+  <system>
+    <site_name>WP Martodosko</site_name>
+    <site_description>Website — Parang WordPress sa GitHub Pages</site_description>
+    <admin_email>admin@example.com</admin_email>
+    <language>tl</language>
+    <default_view>dashboard</default_view>
+  </system>
+  <style_config>
+    <colors primary="#007cba" hover="#00a0d2" success="#00a32a" warning="#dba617" error="#d63638" background="#f0f0f1" card="#ffffff" border="#c3c4c7" text="#3c434a"/>
+  </style_config>
+  <articles>
+    <article id="1" status="published">
+      <title>Tungkol sa Atin</title>
+      <slug>tungkol-sa-atin</slug>
+      <author>Admin</author>
+      <date>2026-09-02 08:30:00</date>
+      <category>Pangkalahatan</category>
+      <excerpt>Ito ay halimbawang pahina na maaari mong baguhin anumang oras.</excerpt>
+      <content><![CDATA[
+        <p>Ang iyong website ay handa na — simulan na ang paggawa!</p>
+      ]]></content>
+    </article>
+  </articles>
+</wp-martodosko>

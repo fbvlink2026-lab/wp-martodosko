@@ -1,0 +1,36 @@
+<h1>🔐 Akawnt at GitHub Token</h1>
+<div class="card">
+  <h3>🔑 Gumawa ng Password</h3>
+  <p style="color:#666;font-size:14px;">Ito ang susi — TOKEN ay naka-encrypt gamit ito. <strong>Hindi na hihingin ulit</strong> tuwing magse-save ka.</p>
+  <table style="width:100%;border-collapse:collapse;margin:15px 0;">
+    <tr><th style="width:220px;padding:10px;text-align:left;">Password:</th><td><input type="password" id="user-password" placeholder="Gumawa ng password" style="width:280px;"></td></tr>
+    <tr><th style="padding:10px;text-align:left;">I-ulit ang Password:</th><td><input type="password" id="user-password-confirm" placeholder="I-ulit dito" style="width:280px;"></td></tr>
+  </table>
+</div>
+<div class="card">
+  <h3>🔐 GitHub Personal Access Token</h3>
+  <p style="color:#666;font-size:14px;">Paano gawin: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token → Piliin ang sakop: <code>repo</code> lang.</p>
+  <table style="width:100%;border-collapse:collapse;margin:15px 0;">
+    <tr><th style="width:220px;padding:10px;text-align:left;">Token:</th><td><input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxx" style="width:280px;"></td></tr>
+    <tr><th style="padding:10px;text-align:left;">Repository:</th><td><input type="text" id="gh-username" placeholder="FBVLink2026-lab" style="width:130px;"> / <input type="text" id="gh-repo" value="wp-martodosko" style="width:130px;"></td></tr>
+  </table>
+</div>
+<button onclick="iLockNa()">🔒 I-LOCK AT I-SAVE</button>
+<div id="status-ok" class="card" style="display:none;border-left:4px solid #00a32a;background:#f0fcf4;margin-top:15px;">
+  <h3>✅ NAKA-LOCK NA!</h3>
+  <p>✅ Token ay naka-encrypt — ligtas sa iyong telepono.<br>✅ Hindi na hihingin ulit — awtomatiko na ang pag-save!</p>
+</div>
+
+<script>
+function iLockNa(){
+  const p1=document.getElementById('user-password').value,p2=document.getElementById('user-password-confirm').value,t=document.getElementById('github-token').value.trim(),u=document.getElementById('gh-username').value.trim(),r=document.getElementById('gh-repo').value.trim();
+  if(!p1)return alert('❌ Gumawa muna ng password!');
+  if(p1!==p2)return alert('❌ Hindi tugma ang password!');
+  if(!t||!u||!r)return alert('❌ Punan ang lahat — Token at Repository!');
+  if(setupCredentials(p1,t,u,r)){
+    document.getElementById('user-password').value=document.getElementById('user-password-confirm').value=document.getElementById('github-token').value='';
+    document.getElementById('status-ok').style.display='block';
+    alert('✅ LAHAT NAKA-LOCK NA!\n🔒 Hindi na hihingin ulit — Awtomatiko na!');
+  }
+}
+</script>

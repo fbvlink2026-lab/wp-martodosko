@@ -1,33 +1,35 @@
-<h1>🛠️ Tagapag-ayos</h1>
-<div style="background:#f0f6fc; border-left:4px solid #007cba; padding:15px; margin-bottom:20px;">
-  <p><strong>🎨 Dynamic Estilo — JSON ang nagkokontrol!</strong><br>
-  Lahat ng kulay, sukat, at disenyo ay nasa <code>data/system-db.json → style_config</code>.<br>
-  Kapag binago mo doon — <em>kusang nababago ang buong pahina!</em></p>
+<h1>🛠️ Tagapag-ayos — Kontrol sa Sidebar</h1>
+<div class="card">
+  <h3>📋 Kasalukuyang Ayos ng Menu</h3>
+  <p style="color:#666; font-size:14px;">💡 I-drag pababa/pataas sa sidebar mismo para baguhin ang pwesto — awtomatikong nai-save.</p>
+  <div id="menu-list"></div>
 </div>
-<div style="display:grid; gap:15px;">
-  <div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:18px;">
-    <h3 style="margin-bottom:12px;">🎨 Baguhin ang Estilo</h3>
-    <div style="display:grid; gap:10px;">
-      <div><label>Kulay ng Sidebar:</label> <input type="color" id="c1" value="#1d2327" oninput="document.querySelector('.sidebar').style.background=this.value"></div>
-      <div><label>Pangunahing Kulay:</label> <input type="color" id="c2" value="#007cba" oninput="document.querySelectorAll('button').forEach(b=>b.style.background=this.value)"></div>
-    </div>
-  </div>
-  <div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:18px;">
-    <h3 style="margin-bottom:12px;">📌 Magdagdag ng Pindutan</h3>
-    <input type="text" id="newbtn" placeholder="Pangalan ng Pindutan" style="padding:7px; width:100%; max-width:250px; margin-bottom:8px;">
-    <button onclick="addButton()">➕ Ilagay</button>
-    <div id="btnres" style="margin-top:8px;"></div>
-  </div>
+<div class="card">
+  <h3>➕ Magdagdag ng Bagong Pindutan</h3>
+  <table style="width:100%;border-collapse:collapse;margin:10px 0;">
+    <tr><th style="width:150px;padding:8px;text-align:left;">ID:</th><td><input type="text" id="new-id" placeholder="hal. contact" style="width:200px;"></td></tr>
+    <tr><th style="padding:8px;text-align:left;">Pamagat:</th><td><input type="text" id="new-label" placeholder="📞 Makipag-ugnayan" style="width:200px;"></td></tr>
+    <tr><th style="padding:8px;text-align:left;">Pahina:</th><td><input type="text" id="new-page" placeholder="contact" style="width:200px;"></td></tr>
+  </table>
+  <button onclick="addMenuItem()">➕ Idagdag sa Menu</button>
 </div>
+<div class="card">
+  <h3>👁️ Itago o Ipakita</h3>
+  <div id="toggle-list"></div>
+</div>
+<div class="card">
+  <h3>🔄 Ibalik sa Orihinal</h3>
+  <p>Ibabalik ang lahat sa orihinal na ayos.</p>
+  <button class="secondary" onclick="resetSidebar()">🔄 I-reset ang Menu</button>
+</div>
+
 <script>
-function addButton(){
-  const label=document.getElementById('newbtn').value.trim();
-  if(!label)return void(document.getElementById('btnres').innerHTML='<span style=color:red>Ilagay muna ang pangalan</span>');
-  const menu=document.querySelector('.menu-list');
-  const a=document.createElement('a');
-  a.href='#'; a.textContent='📄 '+label; a.onclick=e=>{e.preventDefault(); loadContent('dashboard');};
-  const li=document.createElement('li'); li.appendChild(a); menu.appendChild(li);
-  document.getElementById('btnres').innerHTML='<span style=color:green>✅ Inilagay sa tamang pwesto!</span>';
-  document.getElementById('newbtn').value='';
+function refreshMenuList() {
+  const l=getSidebarLayout(),m=document.getElementById('menu-list');
+  m.innerHTML='<ol style="margin:0;padding-left:20px;">'+l.map(i=>`<li style="padding:4px 0;${!i.visible?'opacity:0.5;text-decoration:line-through;':''}">${i.label} <span style="color:#888;font-size:12px;">→ ${i.page}.html</span></li>`).join('')+'</ol>';
+  document.getElementById('toggle-list').innerHTML=l.map(i=>`<label style="display:block;padding:4px 0;"><input type="checkbox" ${i.visible?'checked':''} onchange="toggleMenuItemVisibility('${i.id}',this.checked)"> ${i.label}</label>`).join('');
 }
+function addMenuItem(){const i=document.getElementById('new-id').value.trim(),l=document.getElementById('new-label').value.trim(),p=document.getElementById('new-page').value.trim();if(!i||!l||!p)return alert('❌ Punan ang lahat!');if(addNewMenuItem(i,l,p)){alert('✅ Naidagdag!');refreshMenuList();document.getElementById('new-id').value=document.getElementById('new-label').value=document.getElementById('new-page').value='';}else alert('❌ May ganon nang pindutan!');}
+function resetSidebar(){if(!confirm('🔄 Sigurado?'))return;resetSidebarLayout();refreshMenuList();alert('✅ Naibalik!');}
+document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshMenuList,100));
 </script>

@@ -1,13 +1,10 @@
 <h1>📝 Mga Artikulo</h1>
-<table class="wp-table">
-  <thead><tr><th>Pamagat</th><th>May-akda</th><th>Petsa</th><th>Gawin</th></tr></thead>
-  <tbody>
-    <tr>
-      <td><a href="#">Unang Pahina</a></td>
-      <td>Admin</td>
-      <td>2026-09-02</td>
-      <td><button class="edit-sm-btn" onclick="openEditor('Unang Pahina')">I-edit</button></td>
-    </tr>
-  </tbody>
-</table>
-<button class="edit-btn" onclick="openEditor('Bagong Artikulo')">➕ Bagong Artikulo</button>
+<div class="card">
+  <table>
+    <thead><tr><th>Pamagat</th><th>May-akda</th><th>Petsa</th><th>Katayuan</th><th>Gawin</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Tungkol sa Atin</strong></td><td>Admin</td><td>2026-09-02</td><td style="color:#00a32a;">● Nai-publish</td><td><button class="secondary" onclick="loadPage('editor')">I-edit</button></td></tr>
+    </tbody>
+  </table>
+</div>
+<button>➕ Bagong Artikulo</button>

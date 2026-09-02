@@ -1,0 +1,47 @@
+<h1>✏️ File Editor</h1>
+<div class="card">
+  <h3>Pumili ng File na I-eedit</h3>
+  <select id="file-selector" onchange="openSelectedFile()" style="width:300px;">
+    <option value="">— Pumili ng File —</option>
+    <option value="dashboard.html">📄 dashboard.html</option>
+    <option value="articles.html">📄 articles.html</option>
+    <option value="settings.html">📄 settings.html</option>
+    <option value="organizer.html">📄 organizer.html</option>
+    <option value="new-page-template.html">📄 new-page-template.html</option>
+  </select>
+  <button onclick="openSelectedFile()">📖 Buksan</button>
+</div>
+<div class="card" id="editor-panel" style="display:none;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <h3 id="edit-filename">filename.html</h3>
+    <div>
+      <button onclick="downloadFile()" class="secondary">📤 I-download</button>
+      <button onclick="saveToGitHub()" id="save-btn">💾 I-save sa GitHub</button>
+      <span id="save-status" style="margin-left:8px;font-size:13px;"></span>
+    </div>
+  </div>
+  <textarea id="code-editor" style="width:100%;min-height:400px;padding:12px;border:1px solid #c3c4c7;border-radius:4px;font-family:Consolas,monospace;font-size:13px;line-height:1.5;background:#fafafa;"></textarea>
+</div>
+<div class="card">
+  <h3>🖼️ Mag-upload ng Larawan</h3>
+  <input type="file" id="img-upload" accept="image/*" onchange="showImageLink(this.files)">
+  <div id="img-preview" style="margin-top:10px;display:none;">
+    <img id="preview-img" style="max-width:300px;border-radius:4px;">
+    <p>Kopyahin ang Link: <code id="img-link"></code></p>
+  </div>
+</div>
+
+<script>
+async function openSelectedFile(){const s=document.getElementById('file-selector');if(!s.value)return;currentFile=s.value;document.getElementById('edit-filename').textContent='content/'+currentFile;const r=await fetch('content/'+currentFile);if(r.ok){document.getElementById('code-editor').value=await r.text();document.getElementById('editor-panel').style.display='block';}}
+function downloadFile(){const b=new Blob([document.getElementById('code-editor').value],{type:'text/html'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=currentFile;a.click();URL.revokeObjectURL(u);}
+function showImageLink(f){if(!f.length)return;const r=new FileReader();r.onload=e=>{document.getElementById('preview-img').src=e.target.result;document.getElementById('img-link').textContent='assets/images/'+f[0].name;document.getElementById('img-preview').style.display='block';};r.readAsDataURL(f[0]);}
+async function saveToGitHub(){
+  if(!currentFile)return alert('❌ Wala pang bukas na file!');
+  const c=document.getElementById('code-editor').value,p='docs/pages/content/'+currentFile,s=document.getElementById('save-status');
+  s.textContent='⏳ Ipinapadala...';s.style.color='#007cba';
+  const r=await smartSaveFile(currentFile,c,p);
+  s.textContent=r.status==='QUEUED'?'📡 NAKA-ANTAY — Ise-send kapag online na':(r.ok?'✅ NAISAVE SA GITHUB!':'❌ NABIGO');
+  s.style.color=r.status==='QUEUED'?'#ff9500':(r.ok?'#00a32a':'#d63638');
+  setTimeout(()=>s.textContent='',4000);
+}
+</script>
