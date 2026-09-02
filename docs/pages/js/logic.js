@@ -397,4 +397,4 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(renderSidebarMenu, 50);
 });
 
-console.log('✅ WP Martodosko — logic.js HANDA NA — WALANG DOBLE NA SIDEBAR CODE!');
+console.log('✅ WP Martodosko — logic.js HANDA NA — WALANG DOBLE!');
