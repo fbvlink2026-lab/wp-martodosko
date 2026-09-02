@@ -61,5 +61,89 @@
 .drag-handle { font-size: 12px; opacity: 0.4; }
 </style>
 
-<!-- ✅ ISA LANG — LAHAT NASA LOGIC.JS NA -->
 <script src="js/logic.js"></script>
+
+<!-- ✅ DAGDAG: PAGBANTAY SA SESYON — KUSANG IPAPAKITA ANG MENU PAGKALOGIN -->
+<script>
+(function() {
+  const sb = document.getElementById('sidebar');
+  const btn = document.getElementById('sidebar-toggle');
+  if (!sb || !btn) return;
+
+  function updateToggleBtn() {
+    btn.textContent = sb.classList.contains('collapsed') ? '☰' : '✕';
+  }
+  updateToggleBtn();
+
+  window.toggleSidebar = function() {
+    sb.classList.toggle('collapsed');
+    updateToggleBtn();
+    document.body.dispatchEvent(new CustomEvent('sidebarToggled', {
+      detail: { closed: sb.classList.contains('collapsed') }
+    }));
+  };
+
+  // ==================================================
+  // ✅ PINAKAIMPORTANTE: BANTAYAN ANG PAGBAGO NG SESYON
+  // ==================================================
+  const SESSION_KEY = 'wp_session_active';
+  let lastSessionState = localStorage.getItem(SESSION_KEY);
+
+  function refreshMenuIfAvailable() {
+    if (typeof renderSidebarMenu === 'function') {
+      renderSidebarMenu();
+    }
+  }
+
+  setInterval(() => {
+    const currentState = localStorage.getItem(SESSION_KEY);
+    if (currentState !== lastSessionState) {
+      lastSessionState = currentState;
+      refreshMenuIfAvailable();
+    }
+  }, 300);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(refreshMenuIfAvailable, 100);
+    setTimeout(refreshMenuIfAvailable, 500);
+  });
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === SESSION_KEY) refreshMenuIfAvailable();
+  });
+
+  // ==================================================
+  // ✅ SWIPE DETECTION
+  // ==================================================
+  let startX = 0, isSwipeHorizontal = null;
+  document.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    isSwipeHorizontal = null;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (isSwipeHorizontal === null) {
+      const dx = Math.abs(e.touches[0].clientX - startX);
+      const dy = Math.abs(e.touches[0].clientY - startY);
+      isSwipeHorizontal = dx > dy;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!isSwipeHorizontal) return;
+    const endX = e.changedTouches[0].clientX;
+    const dx = endX - startX;
+    const threshold = 50;
+
+    if (dx > threshold && sb.classList.contains('collapsed')) {
+      sb.classList.remove('collapsed');
+      updateToggleBtn();
+      document.body.dispatchEvent(new CustomEvent('sidebarToggled', { detail: { closed: false } }));
+    } else if (dx < -threshold && !sb.classList.contains('collapsed')) {
+      sb.classList.add('collapsed');
+      updateToggleBtn();
+      document.body.dispatchEvent(new CustomEvent('sidebarToggled', { detail: { closed: true } }));
+    }
+  });
+})();
+</script>
