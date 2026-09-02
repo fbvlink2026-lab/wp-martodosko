@@ -3,139 +3,178 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WP Martodosko</title>
+  <title>WP Martodosko — Admin</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
     body { background:#f0f0f1; color:#3c434a; }
 
-    /* ✅ SIDEBAR — LAGING NASA KALIWA — HINDI NA GUMAGALAW! */
+    /* ===== SIDEBAR — LAGING NASA KALIWA ===== */
     #sidebar-container {
       position:fixed; top:0; left:0; width:180px; height:100vh;
       background:#1d2327; color:#fff; overflow-y:auto; z-index:900;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      transform: translateX(-100%); opacity:0;
     }
-    .sidebar-loading { padding:20px; text-align:center; color:#aaa; }
+    #sidebar-container.nakabukas { transform: translateX(0); opacity:1; }
 
-    /* ✅ LAMAN — NASA KANAN — ITO LANG ANG NAGBABAGO */
+    /* ===== LAMAN — NASA KANAN ===== */
     .content-wrapper {
-      margin-left:180px; padding:0; min-height:100vh;
+      margin-left:0; padding:0; min-height:100vh;
       transition: margin-left 0.3s ease;
     }
-    .content-wrapper.sidebar-hidden { margin-left:0; }
+    .content-wrapper.sidebar-bukas { margin-left:180px; }
 
-    /* ✅ ANG LALAGYAN NG DYNAMIC NA LAMAN */
+    /* ===== DITO ILALAGAY ANG LAHAT NG PAHINA ===== */
     #page-content { min-height:100vh; }
+
+    /* ===== LOADING ===== */
+    .loading-screen {
+      padding:80px 20px; text-align:center; color:#666;
+    }
   </style>
+
+  <!-- ✅ JS: docs/pages/js/logic.js -->
+  <script src="js/logic.js"></script>
 </head>
 <body>
 
-  <!-- ✅ SIDEBAR — LAGING NASA KALIWA — HINDI GUMAGALAW -->
-  <div id="sidebar-container" style="display:none;">
-    <div class="sidebar-loading">⏳ Binabasa ang Menu...</div>
+  <!-- ✅ SIDEBAR — docs/pages/sidebar.html — KASAMA NG ADMIN.HTML -->
+  <div id="sidebar-container">
+    <div style="padding:20px;">⏳ Binabasa ang Menu...</div>
   </div>
 
-  <!-- ✅ LAMAN — DITO ILALAGAY ANG KAHIT ANONG PAHINA: login / dashboard / atbp. -->
+  <!-- ✅ DITO LAGI MAGKAKALAGAY -->
   <main class="content-wrapper" id="content-wrapper">
     <div id="page-content">
-      <div style="padding:60px 20px;text-align:center;">
+      <div class="loading-screen">
         <h2>⏳ Binabasa ang sistema...</h2>
       </div>
     </div>
   </main>
 
-  <!-- ✅ MGA SCRIPT -->
-  <script src="js/logic.js"></script>
+  <!-- ==================================================
+       📌 SESSION KEYS
+       ================================================== -->
   <script>
-  // ==================================================
-  // 📌 ANG LALAGYAN NG LAHAT NG PAHINA
-  // ==================================================
-  const LALAGYAN = document.getElementById('page-content');
-  const SIDEBAR = document.getElementById('sidebar-container');
-  const WRAPPER = document.getElementById('content-wrapper');
+    const SESSION_KEY = 'wp_session_active';
+    const SESSION_EXPIRY = 'wp_session_expiry';
+    const SESSION_USER = 'wp_gh_user';
+    const SESSION_DURATION = 2 * 60 * 60 * 1000;
 
-  // ==================================================
-  // 🔐 KUSANG ILAGAY ANG LOGIN O DASHBOARD
-  // ==================================================
-  async function ihandaAngSistema() {
-    const NAKA_SETUP = localStorage.getItem('wp_gh_user');
+    const LALAGYAN = document.getElementById('page-content');
+    const SIDEBAR = document.getElementById('sidebar-container');
+    const WRAPPER = document.getElementById('content-wrapper');
+  </script>
 
-    if (!NAKA_SETUP) {
-      // ==============================================
-      // ❌ HINDI PA NAKALOGIN → ILAGAY ANG LOGIN SA LALAGYAN
-      // ==============================================
-      SIDEBAR.style.display = 'none'; // ✅ Itago muna ang sidebar
-      WRAPPER.style.marginLeft = '0'; // ✅ Palawakin ang laman
+  <!-- ==================================================
+       📄 KARGAHIN: docs/pages/content/
+       ================================================== -->
+  <script>
+    async function ikargaAngPahina(daan) {
+      try {
+        const buongDaan = `content/${daan}`;
+        const sagot = await fetch(buongDaan);
+        if (!sagot.ok) throw new Error(`Hindi makuha: ${daan}`);
+        LALAGYAN.innerHTML = await sagot.text();
 
-      await ikargaAngPahina('content/login.html');
-      console.log('📋 Login inilalagay sa laman — HINDI PA NAKALOGIN');
+        LALAGYAN.querySelectorAll('script').forEach(luma => {
+          const bago = document.createElement('script');
+          bago.textContent = luma.textContent;
+          Array.from(luma.attributes).forEach(a => bago.setAttribute(a.name, a.value));
+          luma.replaceWith(bago);
+        });
+      } catch (mali) {
+        LALAGYAN.innerHTML = `
+          <div style="padding:40px 20px; text-align:center;">
+            <h2 style="color:#d63638;">❌ ${mali.message}</h2>
+            <p style="margin-top:10px;">Daan: content/${daan}</p>
+            <button onclick="ikargaAngPahina('login.html')"
+              style="margin-top:20px; padding:10px 20px; background:#007cba; color:white; border:none; border-radius:4px; cursor:pointer;">
+              ← Balik sa Login
+            </button>
+          </div>`;
+      }
+    }
+  </script>
 
-      // ✅ BANTAYAN: Kapag nakapag-login na → BUMIBITAW ANG LOGIN AT PAPASOK ANG SIDEBAR
-      const tagapagmasid = setInterval(() => {
-        if (localStorage.getItem('wp_gh_user')) {
-          clearInterval(tagapagmasid);
-          ihandaAngSistema(); // ← Ulitin — ngayon may login na
+  <!-- ==================================================
+       🔐 SESSION CHECK
+       ================================================== -->
+  <script>
+    function iMayActiveSession() {
+      const active = localStorage.getItem(SESSION_KEY) === 'true';
+      const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
+      return active && Date.now() < expiry;
+    }
+  </script>
+
+  <!-- ==================================================
+       📌 KARGAHIN SIDEBAR — docs/pages/sidebar.html
+       ================================================== -->
+  <script>
+    async function ikargaAngSidebar() {
+      try {
+        // ✅ KASAMA NG admin.html — parehong folder
+        const sagot = await fetch('sidebar.html');
+        if (sagot.ok) {
+          SIDEBAR.innerHTML = await sagot.text();
+          SIDEBAR.querySelectorAll('script').forEach(luma => {
+            const bago = document.createElement('script');
+            bago.textContent = luma.textContent;
+            luma.replaceWith(bago);
+          });
         }
-      }, 500);
-
-    } else {
-      // ==============================================
-      // ✅ NAKALOGIN NA → BUMIBITAW ANG LOGIN → PAPASOK ANG SIDEBAR
-      // ==============================================
-      SIDEBAR.style.display = 'block'; // ✅ Ipakita ang sidebar
-      WRAPPER.style.marginLeft = '180px'; // ✅ Iurong ang laman pakanan
-
-      // ✅ IKABIT ANG SIDEBAR — LAGING NANDOON NA
-      await ikabitSidebar();
-
-      // ✅ ILAGAY ANG DASHBOARD — PUMAPALIT SA LUGAR NG LOGIN
-      await ikargaAngPahina('content/dashboard.html');
-      console.log('✅ Login bumitaw — Dashboard pumasok — Sidebar laging nandoon!');
+      } catch(e) {
+        SIDEBAR.innerHTML = `<div style="padding:15px; color:#ff8080;">❌ Sidebar hindi makuha</div>`;
+      }
     }
-  }
+  </script>
 
-  // ==================================================
-  // 📄 KARANIWANG GAWAIN: KARGAHIN ANG PAHINA SA LALAGYAN
-  // ==================================================
-  async function ikargaAngPahina(daan) {
-    try {
-      const sagot = await fetch(daan);
-      if (!sagot.ok) throw new Error(`Hindi makuha: ${daan}`);
-      LALAGYAN.innerHTML = await sagot.text();
-
-      // ✅ Patakbuhin ang mga script sa loob ng kargadong pahina
-      LALAGYAN.querySelectorAll('script').forEach(luma => {
-        const bago = document.createElement('script');
-        bago.textContent = luma.textContent;
-        Array.from(luma.attributes).forEach(a => bago.setAttribute(a.name, a.value));
-        luma.replaceWith(bago);
-      });
-    } catch (mali) {
-      LALAGYAN.innerHTML = `<div style="padding:30px;color:red;text-align:center;"><h3>❌ ${mali.message}</h3></div>`;
+  <!-- ==================================================
+       🎯 PANGUNAHING DALOY
+       ================================================== -->
+  <script>
+    async function iSimulanAngSistema() {
+      if (iMayActiveSession()) {
+        await iPumasokSaDashboard();
+      } else {
+        await ikargaAngPahina('login.html');
+        iBantayanAngLogin();
+      }
     }
-  }
 
-  // ==================================================
-  // 📌 IKABIT ANG SIDEBAR
-  // ==================================================
-  async function ikabitSidebar() {
-    try {
-      const sagot = await fetch('sidebar.html');
-      if (!sagot.ok) throw new Error('Hindi makuha ang sidebar');
-      SIDEBAR.innerHTML = await sagot.text();
-
-      // ✅ Patakbuhin ang mga script sa loob ng sidebar
-      SIDEBAR.querySelectorAll('script').forEach(luma => {
-        const bago = document.createElement('script');
-        bago.textContent = luma.textContent;
-        luma.replaceWith(bago);
-      });
-    } catch (mali) {
-      SIDEBAR.innerHTML = `<div style="padding:15px;color:#ff8080;">❌ Sidebar: ${mali.message}</div>`;
+    async function iPumasokSaDashboard() {
+      await ikargaAngSidebar(); // ✅ docs/pages/sidebar.html
+      SIDEBAR.classList.add('nakabukas');
+      WRAPPER.classList.add('sidebar-bukas');
+      await ikargaAngPahina('dashboard.html');
     }
-  }
 
-  // ✅ SIMULAN LAHAT
-  document.addEventListener('DOMContentLoaded', ihandaAngSistema);
+    function iBantayanAngLogin() {
+      const tagamasid = setInterval(() => {
+        if (iMayActiveSession()) {
+          clearInterval(tagamasid);
+          iPumasokSaDashboard();
+        }
+      }, 300);
+    }
+
+    window.iPumuntaSaCreate = async function() {
+      await ikargaAngPahina('create.html');
+      iBantayanAngLogin();
+    };
+
+    window.iLogout = async function() {
+      localStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(SESSION_EXPIRY);
+      localStorage.removeItem(SESSION_USER);
+      SIDEBAR.classList.remove('nakabukas');
+      WRAPPER.classList.remove('sidebar-bukas');
+      await ikargaAngPahina('login.html');
+      iBantayanAngLogin();
+    };
+
+    document.addEventListener('DOMContentLoaded', iSimulanAngSistema);
   </script>
 
 </body>
