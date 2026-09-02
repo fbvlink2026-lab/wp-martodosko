@@ -1,5 +1,7 @@
 <aside class="sidebar" id="sidebar">
-  <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+  <!-- ✅ PALITANG BUTTON: ☰ kapag sarado → ✕ kapag bukas -->
+  <button class="toggle-btn" id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
   <div class="sidebar-logo">
     🌐 WP Martodosko
     <span id="connection-badge">OFFLINE</span>
@@ -19,27 +21,115 @@
 </aside>
 
 <style>
-.sidebar { position:fixed; top:0; left:0; height:100vh; width:180px; background:#1d2327; color:#a7aaad; transition:transform 0.3s ease; z-index:999; }
-.sidebar.collapsed { transform:translateX(-180px); }
-.toggle-btn { position:absolute; top:12px; right:-42px; width:40px; height:40px; background:#007cba; color:white; border:none; border-radius:0 6px 6px 0; font-size:20px; cursor:pointer; }
-.toggle-btn:hover { background:#00a0d2; }
-.sidebar-logo { padding:15px; font-size:16px; font-weight:bold; color:white; border-bottom:1px solid #333; display:flex; align-items:center; }
-#connection-badge { font-size:11px; padding:2px 6px; border-radius:10px; margin-left:6px; background:#d63638; color:white; }
-#connection-badge.online { background:#00a32a; }
-#env-status, #user-status, #sync-area { padding:8px 15px; font-size:12px; border-bottom:1px solid #333; }
-#user-status { font-size:13px; padding:10px 15px; }
-#user-display { color:#888; }
-#user-display.online { color:#00a32a; }
-#logout-btn { margin-left:6px; padding:2px 6px; font-size:12px; background:#d63638; color:white; border:none; border-radius:3px; display:none; }
-#sync-btn { width:100%; font-size:13px; padding:6px; background:#6aa84f; color:white; border:none; border-radius:4px; }
-#sync-pending { display:none; background:#ff9500; padding:1px 5px; border-radius:8px; font-size:11px; margin-left:4px; }
-#sync-status { font-size:11px; margin-top:4px; color:#aaa; }
-.sidebar-menu { display:flex; flex-direction:column; gap:2px; padding:10px 8px; }
-.menu-item { background:transparent; color:#a7aaad; border:none; border-radius:4px; padding:12px 14px; text-align:left; font-size:15px; cursor:grab; display:flex; justify-content:space-between; align-items:center; }
-.menu-item:hover { background:#2c3338; color:white; }
-.menu-item.active { background:#2271b1; color:white; }
-.menu-item.dragging { opacity:0.5; cursor:grabbing; }
-.menu-item.drag-over { border-top:2px solid #00a32a; }
-.drag-handle { font-size:12px; opacity:0.4; }
+.sidebar {
+  position: fixed; top: 0; left: 0;
+  height: 100vh; width: 180px;
+  background: #1d2327; color: #a7aaad;
+  transition: transform 0.3s ease;
+  z-index: 999;
+  /* ✅ HINDI NABABAWAL ANG SWIPE */
+  touch-action: pan-y;
+}
+
+/* ✅ SARADO — TINAGO SA KALIWA */
+.sidebar.collapsed { transform: translateX(-180px); }
+
+/* ✅ BUTTON — LAGING NAKIKITA SA GILID */
+.toggle-btn {
+  position: absolute; top: 12px; right: -42px;
+  width: 40px; height: 40px;
+  background: #007cba; color: white;
+  border: none; border-radius: 0 6px 6px 0;
+  font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.toggle-btn:hover { background: #00a0d2; }
+
+/* ——— LAHAT NG IBA — HINDI BINAGO ——— */
+.sidebar-logo { padding: 15px; font-size: 16px; font-weight: bold; color: white; border-bottom: 1px solid #333; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+#connection-badge { font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 6px; background: #d63638; color: white; }
+#connection-badge.online { background: #00a32a; }
+#env-status, #user-status, #sync-area { padding: 8px 15px; font-size: 12px; border-bottom: 1px solid #333; }
+#user-status { font-size: 13px; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
+#user-display { color: #888; }
+#user-display.online { color: #00a32a; }
+#logout-btn { padding: 4px 8px; font-size: 12px; background: #d63638; color: white; border: none; border-radius: 3px; display: none; cursor: pointer; }
+#sync-btn { width: 100%; font-size: 13px; padding: 6px; background: #6aa84f; color: white; border: none; border-radius: 4px; cursor: pointer; }
+#sync-pending { display: none; background: #ff9500; padding: 1px 5px; border-radius: 8px; font-size: 11px; margin-left: 4px; }
+#sync-status { font-size: 11px; margin-top: 4px; color: #aaa; }
+.sidebar-menu { display: flex; flex-direction: column; gap: 2px; padding: 10px 8px; overflow-y: auto; flex: 1; }
+.menu-item { background: transparent; color: #a7aaad; border: none; border-radius: 4px; padding: 12px 14px; text-align: left; font-size: 15px; cursor: grab; display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.menu-item:hover { background: #2c3338; color: white; }
+.menu-item.active { background: #2271b1; color: white; }
+.menu-item.dragging { opacity: 0.5; cursor: grabbing; }
+.menu-item.drag-over { border-top: 2px solid #00a32a; }
+.drag-handle { font-size: 12px; opacity: 0.4; }
 </style>
+
 <script src="js/logic.js"></script>
+
+<!-- ✅ SWIPE DETECTION + BUTTON SWAP — DITO PARA SIGURADO GUMAGANA -->
+<script>
+(function() {
+  const sb = document.getElementById('sidebar');
+  const btn = document.getElementById('sidebar-toggle');
+  if (!sb || !btn) return;
+
+  // ✅ PALITAN ANG BUTTON: ☰ kapag sarado / ✕ kapag bukas
+  function updateToggleBtn() {
+    btn.textContent = sb.classList.contains('collapsed') ? '☰' : '✕';
+  }
+
+  // ✅ TAWAGIN AGAD SA PAGBUKAS
+  updateToggleBtn();
+
+  // ✅ IBAHAGI ANG toggleSidebar SA GLOBAL
+  window.toggleSidebar = function() {
+    sb.classList.toggle('collapsed');
+    updateToggleBtn();
+    // I-broadcast para sa admin.html na sumusunod sa margin
+    document.body.dispatchEvent(new CustomEvent('sidebarToggled', {
+      detail: { closed: sb.classList.contains('collapsed') }
+    }));
+  };
+
+  // ✅ SWIPE DETECTION — KALIWA / KANAN
+  let startX = 0, startY = 0, isSwipeHorizontal = null;
+
+  document.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isSwipeHorizontal = null;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (isSwipeHorizontal === null) {
+      const dx = Math.abs(e.touches[0].clientX - startX);
+      const dy = Math.abs(e.touches[0].clientY - startY);
+      isSwipeHorizontal = dx > dy;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!isSwipeHorizontal) return;
+
+    const endX = e.changedTouches[0].clientX;
+    const dx = endX - startX;
+    const threshold = 50; // pinakamaliit na galaw para matukoy
+
+    // SWIPE KANAN → BUKASIN
+    if (dx > threshold && sb.classList.contains('collapsed')) {
+      sb.classList.remove('collapsed');
+      updateToggleBtn();
+      document.body.dispatchEvent(new CustomEvent('sidebarToggled', { detail: { closed: false } }));
+    }
+    // SWIPE KALIWA → SARADIN
+    else if (dx < -threshold && !sb.classList.contains('collapsed')) {
+      sb.classList.add('collapsed');
+      updateToggleBtn();
+      document.body.dispatchEvent(new CustomEvent('sidebarToggled', { detail: { closed: true } }));
+    }
+  });
+})();
+</script>
