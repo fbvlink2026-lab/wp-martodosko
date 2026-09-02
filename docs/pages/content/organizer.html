@@ -1,0 +1,33 @@
+<h1>🛠️ Tagapag-ayos</h1>
+<div style="background:#f0f6fc; border-left:4px solid #007cba; padding:15px; margin-bottom:20px;">
+  <p><strong>🎨 Dynamic Estilo — JSON ang nagkokontrol!</strong><br>
+  Lahat ng kulay, sukat, at disenyo ay nasa <code>data/system-db.json → style_config</code>.<br>
+  Kapag binago mo doon — <em>kusang nababago ang buong pahina!</em></p>
+</div>
+<div style="display:grid; gap:15px;">
+  <div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:18px;">
+    <h3 style="margin-bottom:12px;">🎨 Baguhin ang Estilo</h3>
+    <div style="display:grid; gap:10px;">
+      <div><label>Kulay ng Sidebar:</label> <input type="color" id="c1" value="#1d2327" oninput="document.querySelector('.sidebar').style.background=this.value"></div>
+      <div><label>Pangunahing Kulay:</label> <input type="color" id="c2" value="#007cba" oninput="document.querySelectorAll('button').forEach(b=>b.style.background=this.value)"></div>
+    </div>
+  </div>
+  <div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:18px;">
+    <h3 style="margin-bottom:12px;">📌 Magdagdag ng Pindutan</h3>
+    <input type="text" id="newbtn" placeholder="Pangalan ng Pindutan" style="padding:7px; width:100%; max-width:250px; margin-bottom:8px;">
+    <button onclick="addButton()">➕ Ilagay</button>
+    <div id="btnres" style="margin-top:8px;"></div>
+  </div>
+</div>
+<script>
+function addButton(){
+  const label=document.getElementById('newbtn').value.trim();
+  if(!label)return void(document.getElementById('btnres').innerHTML='<span style=color:red>Ilagay muna ang pangalan</span>');
+  const menu=document.querySelector('.menu-list');
+  const a=document.createElement('a');
+  a.href='#'; a.textContent='📄 '+label; a.onclick=e=>{e.preventDefault(); loadContent('dashboard');};
+  const li=document.createElement('li'); li.appendChild(a); menu.appendChild(li);
+  document.getElementById('btnres').innerHTML='<span style=color:green>✅ Inilagay sa tamang pwesto!</span>';
+  document.getElementById('newbtn').value='';
+}
+</script>
