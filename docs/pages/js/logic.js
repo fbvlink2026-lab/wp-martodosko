@@ -2,6 +2,7 @@
 // 🧠 WP MARTODOSKO — KUMPLETONG LOGIC.JS
 // ✅ MALINIS: WALANG DOBLE NA SIDEBAR/TOGGLE/SWIPE CODE
 // ✅ ANG SIDEBAR → NAKA-SARILI SA sidebar.html — HINDI BANGGA
+// ✅ INAYOS: Pangalan ng function + tawag sa loadPage
 // =========================================================
 
 // ✅ NAKA-TABI — GINAGAMIT NG ENCRYPTION
@@ -61,7 +62,7 @@ function iSimulanSessionCountdown(elId = 'session-timer') {
     if (oras <= 0 && minuto <= 0) {
       el.textContent = '❌ Nag-expire na';
       iTapusinAngSession();
-      if (typeof loadPage === 'function') loadPage('login');
+      if (typeof window.loadPage === 'function') window.loadPage('login');
       return;
     }
     el.textContent = `${oras}h ${minuto}m natitira`;
@@ -236,6 +237,25 @@ window.deleteMenuItem = id => {
 };
 
 // =========================================================
+// ✅ USER STATUS — TUGMA SA sidebar.html
+// =========================================================
+function updateUserStatusDisplay() {
+  const user = localStorage.getItem('wp_gh_user');
+  const display = document.getElementById('user-display');
+  const btn = document.getElementById('logout-btn');
+  if (user && display) {
+    display.textContent = '👤 ' + user;
+    display.classList.add('online');
+    if (btn) btn.style.display = 'inline-block';
+  } else if (display) {
+    display.textContent = '🔐 Hindi Naka-setup';
+    display.classList.remove('online');
+    if (btn) btn.style.display = 'none';
+  }
+}
+window.updateUserStatusDisplay = updateUserStatusDisplay;
+
+// =========================================================
 // 📦 GITHUB REPO
 // =========================================================
 const GH_API_BASE = 'https://api.github.com';
@@ -274,13 +294,7 @@ function updateSyncBadge() {
 // =========================================================
 // 🔄 SYNC
 // =========================================================
-window.smartSaveFile = async function(fileName, content, filePath) {
-  saveToLocalQueue(fileName, content, filePath);
-  if (IS_ONLINE) return await saveToGitHubDirect(fileName, content, filePath);
-  alert('📡 OFFLINE — Naka-save muna sa Lokal.\n🔄 Ise-send sa GitHub kapag nakabalik na ang internet.');
-  return { status: 'QUEUED', message: 'Nakaantay sa koneksyon' };
-};
-async function synchronizeNow() {
+window.synchronizeNow = async function synchronizeNow() {
   const statusEl = document.getElementById('sync-status');
   const syncBtn = document.getElementById('sync-btn');
   if (!IS_ONLINE) { if(statusEl) statusEl.textContent = '❌ Walang internet'; return; }
@@ -297,7 +311,7 @@ async function synchronizeNow() {
   if(syncBtn) syncBtn.disabled = false;
   if(statusEl) statusEl.textContent = `✅ Tapos: ${ok} naisave${fail ? `, ${fail} nabigo` : ''}`;
   setTimeout(() => { if(statusEl) statusEl.textContent = 'Handa'; }, 4000);
-}
+};
 
 // =========================================================
 // 📤 GITHUB DIRECT SAVE
@@ -334,7 +348,7 @@ window.setupCredentials = function(password, token, username, repo) {
   localStorage.setItem('wp_gh_user', username);
   localStorage.setItem('wp_gh_repo', repo);
   iLumikhaNgSession();
-  updateUserStatus();
+  updateUserStatusDisplay();
   return true;
 };
 async function getDecryptedToken() {
@@ -353,26 +367,11 @@ window.clearAllCredentials = function() {
   localStorage.removeItem('wp_gh_user');
   localStorage.removeItem('wp_gh_repo');
   localStorage.removeItem('wp_offline_queue');
-  updateUserStatus();
+  updateUserStatusDisplay();
   updateSyncBadge();
-  if (typeof loadPage === 'function') loadPage('login');
+  if (typeof window.loadPage === 'function') window.loadPage('login');
   alert('✅ BINURA NA');
 };
-
-function updateUserStatus() {
-  const user = localStorage.getItem('wp_gh_user');
-  const display = document.getElementById('user-display');
-  const btn = document.getElementById('logout-btn');
-  if (user && display) {
-    display.textContent = '👤 ' + user;
-    display.classList.add('online');
-    if (btn) btn.style.display = 'inline-block';
-  } else if (display) {
-    display.textContent = '🔐 Hindi Naka-setup';
-    display.classList.remove('online');
-    if (btn) btn.style.display = 'none';
-  }
-}
 
 // =========================================================
 // ✅ EXPOSE FUNCTIONS
@@ -392,9 +391,9 @@ window.getRepoInfo = getRepoInfo;
 document.addEventListener('DOMContentLoaded', () => {
   detectEnvironment();
   updateConnectionStatus();
-  updateUserStatus();
+  updateUserStatusDisplay();
   updateSyncBadge();
   setTimeout(renderSidebarMenu, 50);
 });
 
-console.log('✅ WP Martodosko — logic.js HANDA NA — WALANG DOBLE!');
+console.log('✅ WP Martodosko — logic.js HANDA NA — TUGMA NA SA LAHAT!');
