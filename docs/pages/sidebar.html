@@ -1,3 +1,7 @@
+bakit laging nakalagay offline kahit may internet naman para saan ba ang offline online na yan? 
+
+at bakit hindi nya madetect kung may login session? bakit laging sinasabi na hindi pa naka setup ang token?
+
 <aside class="sidebar" id="sidebar">
   <button class="toggle-btn" id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 
@@ -63,13 +67,16 @@
 
 <script src="js/logic.js"></script>
 
-<!-- ✅ DAGDAG: PAGBANTAY SA SESYON — KUSANG IPAPAKITA ANG MENU PAGKALOGIN -->
+<!-- ✅ INAYOS NA: Online/Offline + User Status + Session Detection -->
 <script>
 (function() {
   const sb = document.getElementById('sidebar');
   const btn = document.getElementById('sidebar-toggle');
   if (!sb || !btn) return;
 
+  // ==================================================
+  // ✅ TOGGLE BUTTON ☰ ↔ ✕
+  // ==================================================
   function updateToggleBtn() {
     btn.textContent = sb.classList.contains('collapsed') ? '☰' : '✕';
   }
@@ -84,36 +91,82 @@
   };
 
   // ==================================================
-  // ✅ PINAKAIMPORTANTE: BANTAYAN ANG PAGBAGO NG SESYON
+  // ✅ ONLINE / OFFLINE DETECTION — TAMA NA!
   // ==================================================
-  const SESSION_KEY = 'wp_session_active';
-  let lastSessionState = localStorage.getItem(SESSION_KEY);
+  const SESSION_KEY = 'wp_session_active'; // ✅ GAMITIN ANG PAREHONG PANGALAN!
 
-  function refreshMenuIfAvailable() {
-    if (typeof renderSidebarMenu === 'function') {
-      renderSidebarMenu();
+  function updateOnlineStatus() {
+    const badge = document.getElementById('connection-badge');
+    if (!badge) return;
+    if (navigator.onLine) {
+      badge.textContent = 'ONLINE';
+      badge.classList.add('online');
+    } else {
+      badge.textContent = 'OFFLINE';
+      badge.classList.remove('online');
     }
   }
 
+  // ✅ TAWAGIN AGAD PAGKABUKAS!
+  updateOnlineStatus();
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+
+  // ==================================================
+  // ✅ USER STATUS — BASAHIN AGAD KUNG NAKA-SETUP NA!
+  // ==================================================
+  function updateUserStatusDisplay() {
+    const user = localStorage.getItem('wp_gh_user');
+    const display = document.getElementById('user-display');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    if (user && display) {
+      display.textContent = '👤 ' + user;
+      display.classList.add('online');
+      if (logoutBtn) logoutBtn.style.display = 'inline-block';
+    } else if (display) {
+      display.textContent = '🔐 Hindi Naka-setup';
+      display.classList.remove('online');
+      if (logoutBtn) logoutBtn.style.display = 'none';
+    }
+  }
+
+  // ✅ TAWAGIN AGAD — AT TUWING MAGBABAGO ANG SESYON!
+  updateUserStatusDisplay();
+
+  // ==================================================
+  // ✅ BANTAY SA SESYON — TUWING MAGBABAGO
+  // ==================================================
+  let lastSessionState = localStorage.getItem(SESSION_KEY);
+
+  function refreshAll() {
+    if (typeof renderSidebarMenu === 'function') renderSidebarMenu();
+    updateUserStatusDisplay(); // ✅ BABAGUHIN AGAD ANG "HINDI NAKA-SETUP" → PANGALAN NG USER!
+  }
+
   setInterval(() => {
-    const currentState = localStorage.getItem(SESSION_KEY);
-    if (currentState !== lastSessionState) {
-      lastSessionState = currentState;
-      refreshMenuIfAvailable();
+    const current = localStorage.getItem(SESSION_KEY);
+    if (current !== lastSessionState) {
+      lastSessionState = current;
+      refreshAll();
     }
   }, 300);
 
   document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(refreshMenuIfAvailable, 100);
-    setTimeout(refreshMenuIfAvailable, 500);
+    setTimeout(refreshAll, 50);
+    setTimeout(refreshAll, 300);
+    setTimeout(updateOnlineStatus, 100); // ✅ Sigurado ang Online/Offline
   });
 
   window.addEventListener('storage', (e) => {
-    if (e.key === SESSION_KEY) refreshMenuIfAvailable();
+    if (e.key === SESSION_KEY || e.key === 'wp_gh_user') {
+      refreshAll();
+      lastSessionState = localStorage.getItem(SESSION_KEY);
+    }
   });
 
   // ==================================================
-  // ✅ SWIPE DETECTION
+  // ✅ SWIPE DETECTION — HINDI BINAGO
   // ==================================================
   let startX = 0, isSwipeHorizontal = null;
   document.addEventListener('touchstart', e => {
@@ -138,11 +191,9 @@
     if (dx > threshold && sb.classList.contains('collapsed')) {
       sb.classList.remove('collapsed');
       updateToggleBtn();
-      document.body.dispatchEvent(new CustomEvent('sidebarToggled', { detail: { closed: false } }));
     } else if (dx < -threshold && !sb.classList.contains('collapsed')) {
       sb.classList.add('collapsed');
       updateToggleBtn();
-      document.body.dispatchEvent(new CustomEvent('sidebarToggled', { detail: { closed: true } }));
     }
   });
 })();
