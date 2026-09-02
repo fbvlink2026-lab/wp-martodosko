@@ -3,7 +3,7 @@ let currentFile = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    const res = await fetch('../sidebar.html');
+    const res = await fetch('sidebar.html');
     if (res.ok) {
       document.getElementById('sidebar-container').innerHTML = await res.text();
       setTimeout(() => { if (typeof updateUserStatus === 'function') updateUserStatus(); }, 80);
