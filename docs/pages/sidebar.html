@@ -1,4 +1,5 @@
 <aside class="sidebar" id="sidebar">
+  <!-- ✅ PALITANG BUTTON: ☰ kapag sarado → ✕ kapag bukas -->
   <button class="toggle-btn" id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 
   <div class="sidebar-logo">
@@ -28,8 +29,11 @@
   z-index: 999;
   touch-action: pan-y;
 }
+
+/* ✅ SARADO — TINAGO SA KALIWA */
 .sidebar.collapsed { transform: translateX(-180px); }
 
+/* ✅ BUTTON — LAGING NAKIKITA SA GILID */
 .toggle-btn {
   position: absolute; top: 12px; right: -42px;
   width: 40px; height: 40px;
@@ -41,6 +45,7 @@
 }
 .toggle-btn:hover { background: #00a0d2; }
 
+/* ——— LAHAT NG IBA ——— */
 .sidebar-logo { padding: 15px; font-size: 16px; font-weight: bold; color: white; border-bottom: 1px solid #333; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 #connection-badge { font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 6px; background: #d63638; color: white; }
 #connection-badge.online { background: #00a32a; }
@@ -63,7 +68,6 @@
 
 <script src="js/logic.js"></script>
 
-<!-- ✅ INAYOS NA: Online/Offline + User Status + Session Detection -->
 <script>
 (function() {
   const sb = document.getElementById('sidebar');
@@ -71,13 +75,16 @@
   if (!sb || !btn) return;
 
   // ==================================================
-  // ✅ TOGGLE BUTTON ☰ ↔ ✕
+  // ✅ PALITAN ANG BUTTON: ☰ = SARADO / ✕ = BUKAS
   // ==================================================
   function updateToggleBtn() {
     btn.textContent = sb.classList.contains('collapsed') ? '☰' : '✕';
   }
   updateToggleBtn();
 
+  // ==================================================
+  // ✅ TOGGLE — IPADALA ANG SENYAL
+  // ==================================================
   window.toggleSidebar = function() {
     sb.classList.toggle('collapsed');
     updateToggleBtn();
@@ -87,9 +94,10 @@
   };
 
   // ==================================================
-  // ✅ ONLINE / OFFLINE DETECTION — TAMA NA!
+  // ✅ ONLINE / OFFLINE STATUS
   // ==================================================
-  const SESSION_KEY = 'wp_session_active'; // ✅ GAMITIN ANG PAREHONG PANGALAN!
+  const SESSION_KEY = 'wp_session_active';
+  const SESSION_USER = 'wp_gh_user';
 
   function updateOnlineStatus() {
     const badge = document.getElementById('connection-badge');
@@ -102,21 +110,20 @@
       badge.classList.remove('online');
     }
   }
-
-  // ✅ TAWAGIN AGAD PAGKABUKAS!
   updateOnlineStatus();
   window.addEventListener('online', updateOnlineStatus);
   window.addEventListener('offline', updateOnlineStatus);
 
   // ==================================================
-  // ✅ USER STATUS — BASAHIN AGAD KUNG NAKA-SETUP NA!
+  // ✅ LOGIN / SESSION DETECTION
   // ==================================================
   function updateUserStatusDisplay() {
-    const user = localStorage.getItem('wp_gh_user');
+    const user = localStorage.getItem(SESSION_USER);
+    const active = localStorage.getItem(SESSION_KEY) === 'true';
     const display = document.getElementById('user-display');
     const logoutBtn = document.getElementById('logout-btn');
 
-    if (user && display) {
+    if (active && user && display) {
       display.textContent = '👤 ' + user;
       display.classList.add('online');
       if (logoutBtn) logoutBtn.style.display = 'inline-block';
@@ -126,47 +133,45 @@
       if (logoutBtn) logoutBtn.style.display = 'none';
     }
   }
-
-  // ✅ TAWAGIN AGAD — AT TUWING MAGBABAGO ANG SESYON!
   updateUserStatusDisplay();
 
-  // ==================================================
-  // ✅ BANTAY SA SESYON — TUWING MAGBABAGO
-  // ==================================================
+  // ✅ BANTAY TUWING MAGBABAGO ANG SESYON
   let lastSessionState = localStorage.getItem(SESSION_KEY);
-
-  function refreshAll() {
-    if (typeof renderSidebarMenu === 'function') renderSidebarMenu();
-    updateUserStatusDisplay(); // ✅ BABAGUHIN AGAD ANG "HINDI NAKA-SETUP" → PANGALAN NG USER!
-  }
+  let lastUser = localStorage.getItem(SESSION_USER);
 
   setInterval(() => {
-    const current = localStorage.getItem(SESSION_KEY);
-    if (current !== lastSessionState) {
-      lastSessionState = current;
-      refreshAll();
+    const currentState = localStorage.getItem(SESSION_KEY);
+    const currentUser = localStorage.getItem(SESSION_USER);
+    if (currentState !== lastSessionState || currentUser !== lastUser) {
+      lastSessionState = currentState;
+      lastUser = currentUser;
+      updateUserStatusDisplay();
+      if (typeof renderSidebarMenu === 'function') renderSidebarMenu();
     }
   }, 300);
 
+  // ✅ PAGKABUKAS — SIGURADUHIN TAMA AGAD
   document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(refreshAll, 50);
-    setTimeout(refreshAll, 300);
-    setTimeout(updateOnlineStatus, 100); // ✅ Sigurado ang Online/Offline
+    setTimeout(updateUserStatusDisplay, 50);
+    setTimeout(updateOnlineStatus, 100);
   });
 
+  // ✅ KAPAG NAGBAGO SA IBANG TAB
   window.addEventListener('storage', (e) => {
-    if (e.key === SESSION_KEY || e.key === 'wp_gh_user') {
-      refreshAll();
+    if (e.key === SESSION_KEY || e.key === SESSION_USER) {
+      updateUserStatusDisplay();
       lastSessionState = localStorage.getItem(SESSION_KEY);
     }
   });
 
   // ==================================================
-  // ✅ SWIPE DETECTION — HINDI BINAGO
+  // ✅ SWIPE DETECTION — KALIWA / KANAN + SENYAL
   // ==================================================
-  let startX = 0, isSwipeHorizontal = null;
+  let startX = 0, startY = 0, isSwipeHorizontal = null;
+
   document.addEventListener('touchstart', e => {
     startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
     isSwipeHorizontal = null;
   }, { passive: true });
 
@@ -184,12 +189,17 @@
     const dx = endX - startX;
     const threshold = 50;
 
+    // SWIPE KANAN → BUKAS
     if (dx > threshold && sb.classList.contains('collapsed')) {
       sb.classList.remove('collapsed');
       updateToggleBtn();
-    } else if (dx < -threshold && !sb.classList.contains('collapsed')) {
+      document.body.dispatchEvent(new CustomEvent('sidebarToggled', { detail: { closed: false } }));
+    }
+    // SWIPE KALIWA → SARADO
+    else if (dx < -threshold && !sb.classList.contains('collapsed')) {
       sb.classList.add('collapsed');
       updateToggleBtn();
+      document.body.dispatchEvent(new CustomEvent('sidebarToggled', { detail: { closed: true } }));
     }
   });
 })();
