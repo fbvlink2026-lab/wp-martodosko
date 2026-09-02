@@ -1,36 +1,157 @@
-<h1>🔐 Akawnt at GitHub Token</h1>
-<div class="card">
-  <h3>🔑 Gumawa ng Password</h3>
-  <p style="color:#666;font-size:14px;">Ito ang susi — TOKEN ay naka-encrypt gamit ito. <strong>Hindi na hihingin ulit</strong> tuwing magse-save ka.</p>
-  <table style="width:100%;border-collapse:collapse;margin:15px 0;">
-    <tr><th style="width:220px;padding:10px;text-align:left;">Password:</th><td><input type="password" id="user-password" placeholder="Gumawa ng password" style="width:280px;"></td></tr>
-    <tr><th style="padding:10px;text-align:left;">I-ulit ang Password:</th><td><input type="password" id="user-password-confirm" placeholder="I-ulit dito" style="width:280px;"></td></tr>
-  </table>
-</div>
-<div class="card">
-  <h3>🔐 GitHub Personal Access Token</h3>
-  <p style="color:#666;font-size:14px;">Paano gawin: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token → Piliin ang sakop: <code>repo</code> lang.</p>
-  <table style="width:100%;border-collapse:collapse;margin:15px 0;">
-    <tr><th style="width:220px;padding:10px;text-align:left;">Token:</th><td><input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxx" style="width:280px;"></td></tr>
-    <tr><th style="padding:10px;text-align:left;">Repository:</th><td><input type="text" id="gh-username" placeholder="FBVLink2026-lab" style="width:130px;"> / <input type="text" id="gh-repo" value="wp-martodosko" style="width:130px;"></td></tr>
-  </table>
-</div>
-<button onclick="iLockNa()">🔒 I-LOCK AT I-SAVE</button>
-<div id="status-ok" class="card" style="display:none;border-left:4px solid #00a32a;background:#f0fcf4;margin-top:15px;">
-  <h3>✅ NAKA-LOCK NA!</h3>
-  <p>✅ Token ay naka-encrypt — ligtas sa iyong telepono.<br>✅ Hindi na hihingin ulit — awtomatiko na ang pag-save!</p>
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mag-login — WP Martodosko</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:system-ui,-apple-system,sans-serif; }
+    body { background:#f0f0f1; color:#3c434a; padding:40px 20px; }
+    .container { max-width:480px; margin:0 auto; }
+    h1 { font-size:24px; margin-bottom:30px; color:#1d2327; text-align:center; }
+    .card { background:white; border:1px solid #c3c4c7; border-radius:4px; padding:25px; margin-bottom:20px; }
+    h3 { font-size:16px; margin-bottom:15px; color:#1d2327; }
+    p { color:#50575e; font-size:14px; margin-bottom:15px; line-height:1.5; }
+    table { width:100%; border-collapse:collapse; margin:15px 0; }
+    th { padding:10px; text-align:left; font-weight:500; color:#1d2327; width:140px; }
+    td { padding:10px; }
+    input { width:100%; padding:10px; border:1px solid #c3c4c7; border-radius:4px; font-size:15px; }
+    input:focus { outline:none; border-color:#007cba; box-shadow:0 0 0 1px #007cba; }
+    .btn { width:100%; padding:12px; border:none; border-radius:4px; font-size:15px; font-weight:500; cursor:pointer; transition:background 0.2s; }
+    .btn-primary { background:#007cba; color:white; margin-top:10px; }
+    .btn-primary:hover { background:#0090d0; }
+    .btn-secondary { background:#e5e5e5; color:#3c434a; margin-top:10px; }
+    .btn-secondary:hover { background:#dcdcde; }
+    .notice { padding:12px; border-radius:4px; font-size:14px; margin-bottom:15px; }
+    .notice.info { background:#e5f5fa; color:#004e69; border-left:4px solid #00a0d2; }
+    .notice.warning { background:#fcf9e8; color:#664000; border-left:4px solid #dba617; }
+    .notice.error { background:#fbeaea; color:#8a2424; border-left:4px solid #d63638; }
+    .link { text-align:center; margin-top:15px; font-size:14px; }
+    .link a { color:#007cba; text-decoration:none; }
+    .link a:hover { text-decoration:underline; }
+    #session-status { margin-bottom:15px; }
+    .time-left { font-weight:600; color:#006509; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🔐 Mag-login</h1>
+
+  <!-- ✅ SESSION STATUS CHECK -->
+  <div id="session-status"></div>
+
+  <div class="card" id="login-form">
+    <h3>Ipasok ang Password</h3>
+    <p>Ito ang password na ginawa mo kasama ng iyong GitHub Token.</p>
+
+    <table>
+      <tr>
+        <th>Password:</th>
+        <td>
+          <input type="password" id="login-password" placeholder="Ipasok ang iyong password">
+        </td>
+      </tr>
+    </table>
+
+    <button class="btn btn-primary" onclick="iSubmetLogin()">🔓 Mag-login</button>
+  </div>
+
+  <div class="link">
+    <p>Wala pang akawnt? <a href="create.html">Gumawa ng Akawnt →</a></p>
+  </div>
 </div>
 
 <script>
-function iLockNa(){
-  const p1=document.getElementById('user-password').value,p2=document.getElementById('user-password-confirm').value,t=document.getElementById('github-token').value.trim(),u=document.getElementById('gh-username').value.trim(),r=document.getElementById('gh-repo').value.trim();
-  if(!p1)return alert('❌ Gumawa muna ng password!');
-  if(p1!==p2)return alert('❌ Hindi tugma ang password!');
-  if(!t||!u||!r)return alert('❌ Punan ang lahat — Token at Repository!');
-  if(setupCredentials(p1,t,u,r)){
-    document.getElementById('user-password').value=document.getElementById('user-password-confirm').value=document.getElementById('github-token').value='';
-    document.getElementById('status-ok').style.display='block';
-    alert('✅ LAHAT NAKA-LOCK NA!\n🔒 Hindi na hihingin ulit — Awtomatiko na!');
+// ==================================================
+// ✅ SESSION CHECK — AGAD TIGNAN PAGBUKAS
+// ==================================================
+const SESSION_KEY = 'wp_session_active';
+const SESSION_EXPIRY = 'wp_session_expiry';
+const SESSION_USER = 'wp_session_user';
+const SESSION_DURATION = 2 * 60 * 60 * 1000; // ⏰ 2 oras
+
+window.addEventListener('DOMContentLoaded', iSuriinAngSession);
+
+function iSuriinAngSession() {
+  const statusDiv = document.getElementById('session-status');
+  const loginForm = document.getElementById('login-form');
+  const sessionActive = localStorage.getItem(SESSION_KEY) === 'true';
+  const expiryTime = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
+  const ngayon = Date.now();
+
+  // ✅ WALANG SESSION O WALA PANG NAG-LOGIN
+  if (!sessionActive || expiryTime <= ngayon) {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_EXPIRY);
+    statusDiv.innerHTML = `<div class="notice warning">⚠️ Walang aktibong sesyon — kailangan mag-login o gumawa ng akawnt.</div>`;
+    loginForm.style.display = 'block';
+    return;
   }
+
+  // ✅ MAY AKTIBONG SESSION — KALKULAHIN ANG NATITIRANG ORAS
+  const natitira = expiryTime - ngayon;
+  const oras = Math.floor(natitira / (1000 * 60 * 60));
+  const minuto = Math.floor((natitira % (1000 * 60 * 60)) / (1000 * 60));
+
+  statusDiv.innerHTML = `
+    <div class="notice info">
+      ✅ Aktibo ang sesyon — may natitirang <span class="time-left">${oras} oras at ${minuto} minuto</span>
+      <button onclick="iRenewSession()" style="margin-left:10px; padding:4px 8px; font-size:13px; cursor:pointer;">🔄 Palawigin</button>
+      <button onclick="iLogout()" style="margin-left:5px; padding:4px 8px; font-size:13px; background:#fbeaea; color:#8a2424; border:none; border-radius:3px; cursor:pointer;">🚪 Labas</button>
+    </div>`;
+
+  // ✅ KUNG MAY SESSION — PWEDENG DI NA MAG-LOGIN ULIT
+  loginForm.style.display = 'block'; // Ipakita pa rin para pwede mag-login sa ibang akawnt
+}
+
+// ==================================================
+// ✅ PAG SUBMIT NG LOGIN
+// ==================================================
+function iSubmetLogin() {
+  const password = document.getElementById('login-password').value;
+  if (!password) return alert('❌ Ipasok muna ang password.');
+
+  // ✅ Kunin ang nakaimbak na password
+  const nakaimbak = localStorage.getItem('wp_user_password');
+  if (!nakaimbak) {
+    alert('❌ Wala pang akawnt na nakarehistro — pupunta sa paggawa...');
+    window.location.href = 'create.html';
+    return;
+  }
+
+  // ✅ I-verify ang password
+  if (password !== nakaimbak) {
+    return alert('❌ Mali ang password — subukan muli.');
+  }
+
+  // ✅ LUMIKHA NG BAGONG SESSION
+  localStorage.setItem(SESSION_KEY, 'true');
+  localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
+  localStorage.setItem(SESSION_USER, 'active_user');
+
+  alert('✅ Matagumpay na nakapasok!');
+  window.location.href = 'dashboard.html'; // ✅ Pumunta sa dashboard
+}
+
+// ==================================================
+// ✅ PALAWIGIN ANG SESSION
+// ==================================================
+function iRenewSession() {
+  localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
+  alert('✅ Ang sesyon ay pinalawig pa ng 2 oras.');
+  iSuriinAngSession(); // I-refresh ang display
+}
+
+// ==================================================
+// ✅ LOGOUT — TAPUSIN ANG SESSION
+// ==================================================
+function iLogout() {
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_EXPIRY);
+  localStorage.removeItem(SESSION_USER);
+  alert('✅ Nakalabas na — tinapos na ang sesyon.');
+  iSuriinAngSession();
 }
 </script>
+</body>
+</html>
