@@ -33,12 +33,12 @@
     }
   </style>
 
-  <!-- ✅ JS: docs/pages/js/logic.js -->
-  <script src="js/logic.js"></script>
+  <!-- ❌ TINANGGAL NA: <script src="js/logic.js"></script> -->
+  <!-- ✅ DAHIL NAKAKABIT NA ANG logic.js SA LOOB NG sidebar.html — HINDI NA DAPAT DITO -->
 </head>
 <body>
 
-  <!-- ✅ SIDEBAR — docs/pages/sidebar.html — KASAMA NG ADMIN.HTML -->
+  <!-- ✅ SIDEBAR — docs/pages/sidebar.html — DITO NAKAKABIT ANG logic.js -->
   <div id="sidebar-container">
     <div style="padding:20px;">⏳ Binabasa ang Menu...</div>
   </div>
@@ -53,7 +53,7 @@
   </main>
 
   <!-- ==================================================
-       📌 SESSION KEYS
+       📌 SESSION KEYS — LOKAL LANG SA ADMIN.HTML
        ================================================== -->
   <script>
     const SESSION_KEY = 'wp_session_active';
@@ -77,6 +77,7 @@
         if (!sagot.ok) throw new Error(`Hindi makuha: ${daan}`);
         LALAGYAN.innerHTML = await sagot.text();
 
+        // ✅ Patakbuhin ang mga script sa loob ng kargadong pahina
         LALAGYAN.querySelectorAll('script').forEach(luma => {
           const bago = document.createElement('script');
           bago.textContent = luma.textContent;
@@ -110,19 +111,15 @@
 
   <!-- ==================================================
        📌 KARGAHIN SIDEBAR — docs/pages/sidebar.html
+       ✅ KASAMA NA ANG logic.js SA LOOB NITO
        ================================================== -->
   <script>
     async function ikargaAngSidebar() {
       try {
-        // ✅ KASAMA NG admin.html — parehong folder
         const sagot = await fetch('sidebar.html');
         if (sagot.ok) {
           SIDEBAR.innerHTML = await sagot.text();
-          SIDEBAR.querySelectorAll('script').forEach(luma => {
-            const bago = document.createElement('script');
-            bago.textContent = luma.textContent;
-            luma.replaceWith(bago);
-          });
+          // ✅ Ang logic.js ay kusang tatakbo galing sa sidebar.html
         }
       } catch(e) {
         SIDEBAR.innerHTML = `<div style="padding:15px; color:#ff8080;">❌ Sidebar hindi makuha</div>`;
@@ -144,7 +141,7 @@
     }
 
     async function iPumasokSaDashboard() {
-      await ikargaAngSidebar(); // ✅ docs/pages/sidebar.html
+      await ikargaAngSidebar(); // ✅ Dito na kakabit ang sidebar.html + logic.js
       SIDEBAR.classList.add('nakabukas');
       WRAPPER.classList.add('sidebar-bukas');
       await ikargaAngPahina('dashboard.html');
