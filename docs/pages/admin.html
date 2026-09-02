@@ -9,18 +9,18 @@
     body { background:#f0f0f1; color:#3c434a; }
 
     /* ==================================================
-       ✅ HINDI NA DITO ANG SIDEBAR POSISYON — NASA sidebar.html NA!
+       ✅ ADMIN = LAMAN LANG — HINDI NANGHIHIMASOK SA SIDEBAR
        ================================================== */
 
-    /* ===== LAMAN — NASA KANAN — AYUSIN AYON SA KONDISYON NG SIDEBAR ===== */
+    /* ===== LAMAN — NASA KANAN KAPAG BUKAS ANG SIDEBAR ===== */
     .content-wrapper {
-      margin-left: 180px; /* ✅ Kapag bukas ang sidebar — katumbas ng lapad nito */
+      margin-left: 180px; /* ✅ Katumbas ng lapad ng sidebar */
       padding: 0;
       min-height: 100vh;
-      transition: margin-left 0.3s ease;
+      transition: margin-left 0.3s ease; /* ✅ KAPAREHO NG BILIS NG SIDEBAR */
     }
 
-    /* ✅ Kapag sarado ang sidebar — ibalik sa gilid */
+    /* ✅ Kapag SARADO — walang margin — sumusunod sa senyal */
     .content-wrapper.sidebar-closed {
       margin-left: 0;
     }
@@ -33,17 +33,15 @@
       padding:80px 20px; text-align:center; color:#666;
     }
   </style>
-
-  <!-- ❌ TINANGGAL NA: sariling posisyon/lapad ng sidebar — nasa sidebar.html na -->
 </head>
 <body>
 
-  <!-- ✅ SIDEBAR — kinakarga mula sa sidebar.html — SARILI NIYANG POSISYON! -->
+  <!-- ✅ SIDEBAR — SARILI NIYANG GALAW AT AYOS — HINDI NABABAGABAG -->
   <div id="sidebar-placeholder">
     <div style="padding:20px;">⏳ Binabasa ang Menu...</div>
   </div>
 
-  <!-- ✅ DITO LAGI MAGKAKALAGAY ANG NILALAMAN -->
+  <!-- ✅ LAMAN — SUMUSUNOD LANG SA SENYAL NG SIDEBAR -->
   <main class="content-wrapper" id="content-wrapper">
     <div id="page-content">
       <div class="loading-screen">
@@ -109,7 +107,7 @@
   </script>
 
   <!-- ==================================================
-       📌 KARGAHIN SIDEBAR — SARILI NIYANG POSISYON!
+       📌 KARGAHIN SIDEBAR — HINDI NANGHIHIMASOK, NAGHIHINTAY LANG
        ================================================== -->
   <script>
     async function ikargaAngSidebar() {
@@ -117,25 +115,27 @@
         const sagot = await fetch('sidebar.html');
         if (sagot.ok) {
           document.getElementById('sidebar-placeholder').outerHTML = await sagot.text();
-          
-          // ✅ I-sabay ang paggalaw ng laman sa pagbukas/pagsara ng sidebar
+
+          // ✅ TANGGALIN NA ANG MUTATIONOBSERVER — HINDI NA KAILANGAN!
+          // ✅ HINTAYIN NA LANG ANG SENYAL MULA SA SIDEBAR
           setTimeout(() => {
             const sb = document.getElementById('sidebar');
             if (sb) {
-              // Obserbahan kung kailan nagbabago ang klase ng sidebar
-              new MutationObserver(() => {
-                WRAPPER.classList.toggle('sidebar-closed', sb.classList.contains('collapsed'));
-              }).observe(sb, { attributes: true, attributeFilter: ['class'] });
-              
-              // ✅ I-set agad ang tamang estado
+              // ✅ ISA LANG: Kunin ang kasalukuyang estado pagkakarga
               WRAPPER.classList.toggle('sidebar-closed', sb.classList.contains('collapsed'));
             }
-          }, 50);
+          }, 80); // ✅ Sapat na oras para makarga ang sidebar
         }
       } catch(e) {
         console.error('Sidebar error:', e);
       }
     }
+
+    // ✅ TANGGAPIN ANG SENYAL MULA SA SIDEBAR — ITO NA LANG!
+    document.body.addEventListener('sidebarToggled', e => {
+      // SARADO = true → tanggalin margin | BUKAS = false → ibalik margin
+      WRAPPER.classList.toggle('sidebar-closed', e.detail.closed);
+    });
   </script>
 
   <!-- ==================================================
@@ -143,8 +143,7 @@
        ================================================== -->
   <script>
     async function iPumasokSaDashboard() {
-      await ikargaAngSidebar(); // ✅ Sarili niyang posisyon — walang babaguhin dito
-      WRAPPER.classList.remove('sidebar-closed');
+      await ikargaAngSidebar();
       await ikargaAngPahina('dashboard.html');
     }
 
@@ -167,7 +166,6 @@
       localStorage.removeItem(SESSION_EXPIRY);
       localStorage.removeItem(SESSION_USER);
       if (typeof clearAllCredentials === 'function') clearAllCredentials();
-      WRAPPER.classList.remove('sidebar-closed');
       await ikargaAngPahina('login.html');
       iBantayanAngLogin();
     };
