@@ -1,0 +1,32 @@
+<h1>🎨 Pagsama-samahin ang CSS</h1>
+
+<div class="card">
+  <h3>Paano ito gumagana:</h3>
+  <ol style="margin:10px 0 10px 25px;">
+    <li>🔍 Binabasa ang lahat ng pahina — kinukuha ang <code>&lt;style&gt;</code></li>
+    <li>⚖️ Ikumpara sa kasalukuyang <code>style.css</code> — <strong>hindi idadagdag kung nandoon na</strong></li>
+    <li>➕ Idinaragdag lang ang mga bago — <strong>walang doble</strong></li>
+    <li>🧹 Binubura ang <code>&lt;style&gt;</code> sa bawat pahina</li>
+    <li>🔗 Pinalitan ng <code>&lt;link rel="stylesheet" href="css/style.css"&gt;</code></li>
+    <li>📤 Ibinibigay ang bagong <code>style.css</code> — i-upload lang sa GitHub</li>
+  </ol>
+</div>
+
+<div class="card">
+  <button onclick="simulanPagsama()">🚀 SIMULAN NGAYON</button>
+  <button class="secondary" onclick="document.getElementById('log-area').innerHTML=''">🧹 Linisin ang Talaan</button>
+</div>
+
+<div class="card">
+  <h3>📋 Talaan ng Ginawa:</h3>
+  <div id="log-area" style="background:#f6f7f7;padding:15px;border-radius:4px;min-height:150px;font-family:Consolas,monospace;font-size:13px;white-space:pre-wrap;"></div>
+</div>
+
+<div class="card" id="result-area" style="display:none;">
+  <h3>✅ TAPOS NA! — Bagong style.css</h3>
+  <p>I-download ang file sa ibaba at i-upload sa <code>docs/pages/css/style.css</code> sa iyong GitHub repository.</p>
+  <button onclick="iDownloadStyle()">📥 I-download ang style.css</button>
+  <textarea id="style-output" style="width:100%;min-height:250px;margin-top:15px;padding:10px;border:1px solid #ddd;border-radius:4px;font-family:Consolas,monospace;font-size:12px;display:none;"></textarea>
+</div>
+
+<script src="../js/css-merger.js"></script>
