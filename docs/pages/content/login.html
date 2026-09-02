@@ -1,3 +1,5 @@
+tama ba ito?
+
 <!DOCTYPE html>
 <html lang="tl">
 <head>
@@ -42,7 +44,7 @@
 
   <div class="card" id="login-form">
     <h3>Ipasok ang Password</h3>
-    <p>Ang password na ginamit mo noong inilagay ang iyong GitHub Token.</p>
+    <p>Ito ang password na ginawa mo kasama ng iyong GitHub Token.</p>
 
     <table>
       <tr>
@@ -61,86 +63,94 @@
   </div>
 </div>
 
-<!-- ✅ IKABIT ANG LOGIC.JS — PARA IISA ANG SISTEMA -->
-<script src="../js/logic.js"></script>
-
 <script>
 // ==================================================
-// ✅ SESSION CHECK — GAMIT ANG logic.js
+// ✅ SESSION CHECK — AGAD TIGNAN PAGBUKAS
 // ==================================================
+const SESSION_KEY = 'wp_session_active';
+const SESSION_EXPIRY = 'wp_session_expiry';
+const SESSION_USER = 'wp_session_user';
+const SESSION_DURATION = 2 * 60 * 60 * 1000; // ⏰ 2 oras
+
 window.addEventListener('DOMContentLoaded', iSuriinAngSession);
 
 function iSuriinAngSession() {
   const statusDiv = document.getElementById('session-status');
   const loginForm = document.getElementById('login-form');
+  const sessionActive = localStorage.getItem(SESSION_KEY) === 'true';
+  const expiryTime = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
+  const ngayon = Date.now();
 
-  // ✅ GAMIT ANG logic.js — IISA ANG SISTEMA
-  if (!window.iMayActiveSession || !iMayActiveSession()) {
+  // ✅ WALANG SESSION O WALA PANG NAG-LOGIN
+  if (!sessionActive || expiryTime <= ngayon) {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_EXPIRY);
     statusDiv.innerHTML = `<div class="notice warning">⚠️ Walang aktibong sesyon — kailangan mag-login o gumawa ng akawnt.</div>`;
     loginForm.style.display = 'block';
     return;
   }
 
-  // ✅ MAY SESSION — KALKULAHIN ANG NATITIRANG ORAS
-  const [oras, minuto] = iKuninNatitirangOras();
-  const user = localStorage.getItem('wp_gh_user') || 'User';
+  // ✅ MAY AKTIBONG SESSION — KALKULAHIN ANG NATITIRANG ORAS
+  const natitira = expiryTime - ngayon;
+  const oras = Math.floor(natitira / (1000 * 60 * 60));
+  const minuto = Math.floor((natitira % (1000 * 60 * 60)) / (1000 * 60));
 
   statusDiv.innerHTML = `
     <div class="notice info">
-      ✅ Naka-login bilang <strong>${user}</strong> — may natitirang <span class="time-left">${oras} oras at ${minuto} minuto</span>
-      <button onclick="iPalawiginSession()" style="margin-left:10px; padding:4px 8px; font-size:13px; cursor:pointer;">🔄 Palawigin</button>
+      ✅ Aktibo ang sesyon — may natitirang <span class="time-left">${oras} oras at ${minuto} minuto</span>
+      <button onclick="iRenewSession()" style="margin-left:10px; padding:4px 8px; font-size:13px; cursor:pointer;">🔄 Palawigin</button>
       <button onclick="iLogout()" style="margin-left:5px; padding:4px 8px; font-size:13px; background:#fbeaea; color:#8a2424; border:none; border-radius:3px; cursor:pointer;">🚪 Labas</button>
     </div>`;
 
-  // ✅ PUMUNTA AGAD KUNG MAY SESSION NA
-  loginForm.style.display = 'block';
+  // ✅ KUNG MAY SESSION — PWEDENG DI NA MAG-LOGIN ULIT
+  loginForm.style.display = 'block'; // Ipakita pa rin para pwede mag-login sa ibang akawnt
 }
 
 // ==================================================
-// ✅ PAG SUBMIT NG LOGIN — TUGMA SA ENCRYPTION NG logic.js
+// ✅ PAG SUBMIT NG LOGIN
 // ==================================================
 function iSubmetLogin() {
   const password = document.getElementById('login-password').value;
   if (!password) return alert('❌ Ipasok muna ang password.');
 
-  // ✅ Gamitin ang parehong paraan ng pag-decrypt mula sa logic.js
-  const STORAGE_MASTER_KEY = 'master-lock-key-only-local-not-sent-123!';
-  const ep = localStorage.getItem('wp_enc_pass');
-  if (!ep) {
-    alert('❌ Wala pang akawnt — pupunta sa paggawa...');
+  // ✅ Kunin ang nakaimbak na password
+  const nakaimbak = localStorage.getItem('wp_user_password');
+  if (!nakaimbak) {
+    alert('❌ Wala pang akawnt na nakarehistro — pupunta sa paggawa...');
     window.location.href = 'create.html';
     return;
   }
 
-  // ✅ I-verify ang password gamit ang parehong key
-  function deriveKey(p) { const s = 'wp-martodosko-2026-secret-salt'; return btoa(p + '|' + navigator.userAgent + '|' + s); }
-  function decryptData(e, p) { try { const d = atob(e), k = deriveKey(p); let r=''; for(let i=0;i<d.length;i++) r += String.fromCharCode(d.charCodeAt(i) ^ k.charCodeAt(i % k.length)); return r; } catch { return null; } }
-
-  const decrypted = decryptData(ep, STORAGE_MASTER_KEY);
-  if (decrypted !== password) {
+  // ✅ I-verify ang password
+  if (password !== nakaimbak) {
     return alert('❌ Mali ang password — subukan muli.');
   }
 
-  // ✅ LUMIKHA NG SESSION — GAMIT ANG logic.js
-  iLumikhaNgSession();
+  // ✅ LUMIKHA NG BAGONG SESSION
+  localStorage.setItem(SESSION_KEY, 'true');
+  localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
+  localStorage.setItem(SESSION_USER, 'active_user');
 
   alert('✅ Matagumpay na nakapasok!');
-  window.location.href = './admin.html';
+  window.location.href = './admin.html'; // ✅ Pumunta sa dashboard
 }
 
 // ==================================================
-// ✅ PALAWIGIN — GAMIT ANG logic.js
+// ✅ PALAWIGIN ANG SESSION
 // ==================================================
-function iPalawiginSession() {
-  if (window.iPalawiginSession) iPalawiginSession();
-  iSuriinAngSession();
+function iRenewSession() {
+  localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
+  alert('✅ Ang sesyon ay pinalawig pa ng 2 oras.');
+  iSuriinAngSession(); // I-refresh ang display
 }
 
 // ==================================================
-// ✅ LOGOUT — GAMIT ANG logic.js
+// ✅ LOGOUT — TAPUSIN ANG SESSION
 // ==================================================
 function iLogout() {
-  if (window.iTapusinAngSession) iTapusinAngSession();
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_EXPIRY);
+  localStorage.removeItem(SESSION_USER);
   alert('✅ Nakalabas na — tinapos na ang sesyon.');
   iSuriinAngSession();
 }
