@@ -1,0 +1,60 @@
+{
+  "system_info": {
+    "site_name": "WP Martodosko",
+    "version": "1.0.0",
+    "created_date": "2026-09-02",
+    "last_updated": "2026-09-02T19:21:00+08:00",
+    "status": "active"
+  },
+  "config": {
+    "default_view": "dashboard",
+    "sidebar_position": "left",
+    "sidebar_width": 160,
+    "theme": "wp-admin",
+    "language": "tl",
+    "auto_organize": true,
+    "auto_style_apply": true
+  },
+  "style_config": {
+    "sidebar": {
+      "background": "#1d2327",
+      "text_color": "#a7aaad",
+      "active_bg": "#2c3338",
+      "active_border": "#72aee6",
+      "hover_bg": "#2c3338"
+    },
+    "container": {
+      "background": "#ffffff",
+      "border_color": "#c3c4c7",
+      "radius": "4px",
+      "padding": "25px"
+    },
+    "buttons": {
+      "primary_bg": "#007cba",
+      "primary_text": "#ffffff",
+      "radius": "4px",
+      "hover_bg": "#00a0d2"
+    },
+    "text": {
+      "heading_color": "#1d2327",
+      "body_color": "#3c434a"
+    },
+    "layout": {
+      "body_bg": "#f0f0f1",
+      "accent": "#007cba"
+    }
+  },
+  "menu_items": [
+    { "id": "dashboard",   "icon": "📊", "label": "Dashboard",     "content_file": "content/dashboard.html",   "position": 1, "enabled": true },
+    { "id": "articles",    "icon": "📝", "label": "Mga Artikulo",  "content_file": "content/articles.html",    "position": 2, "enabled": true },
+    { "id": "media",       "icon": "🖼️", "label": "Media",         "content_file": "content/media.html",       "position": 3, "enabled": true },
+    { "id": "settings",    "icon": "⚙️", "label": "Mga Setting",   "content_file": "content/settings.html",    "position": 4, "enabled": true },
+    { "id": "organizer",   "icon": "🛠️", "label": "Tagapag-ayos",  "content_file": "content/organizer.html",   "position": 5, "enabled": true }
+  ],
+  "records": {
+    "logs": [
+      { "timestamp": "2026-09-02T19:21:00+08:00", "action": "full_system_deploy", "details": "Buong sistema na inilipat sa docs/pages/" }
+    ],
+    "custom_buttons": []
+  }
+}
