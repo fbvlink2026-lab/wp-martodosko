@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧹 Burahin ang Cache — WP Martodosko</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:system-ui,-apple-system,sans-serif; }
+    body { background:#f0f0f1; color:#3c434a; padding:40px 20px; }
+    .container { max-width:520px; margin:0 auto; }
+    h1 { font-size:24px; margin-bottom:10px; color:#1d2327; text-align:center; }
+    .subtitle { text-align:center; color:#666; margin-bottom:30px; }
+    .card { background:white; border:1px solid #c3c4c7; border-radius:4px; padding:25px; margin-bottom:20px; }
+    .status { padding:15px; border-radius:4px; margin:15px 0; font-weight:500; }
+    .status.wait { background:#e8f0fe; color:#1a55b8; border-left:4px solid #2271b1; }
+    .status.ok { background:#ecf7ed; color:#006600; border-left:4px solid #00a32a; }
+    .btn { width:100%; padding:14px; border:none; border-radius:4px; font-size:16px; font-weight:500; cursor:pointer; transition:background 0.2s; }
+    .btn-primary { background:#007cba; color:white; margin-top:10px; }
+    .btn-primary:hover { background:#0090d0; }
+    .btn-success { background:#00a32a; color:white; margin-top:10px; }
+    .btn-success:hover { background:#008a20; }
+    .btn-secondary { background:#e5e5e5; color:#3c434a; margin-top:10px; }
+    .btn-secondary:hover { background:#dcdcde; }
+    .url-list { background:#f9f9f9; border:1px solid #e5e5e5; padding:12px; border-radius:4px; margin:15px 0; font-family:monospace; font-size:13px; word-break:break-all; }
+    .step { margin:18px 0; padding-left:10px; border-left:3px solid #007cba; }
+    .step strong { color:#1d2327; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🧹 Burahin ang Cache</h1>
+  <p class="subtitle">Para siguradong laging BAGONG BERSYON ang makikita — walang lumang kopya!</p>
+
+  <div class="card">
+    <div id="status-box" class="status wait">
+      ⏳ Handa na — pindutin ang pindutan sa ibaba
+    </div>
+
+    <h3>📋 Mga Daanang Ibubura ang Cache:</h3>
+    <div class="url-list" id="url-list">
+      • sidebar.html<br>
+      • admin.html<br>
+      • content/dashboard.html<br>
+      • content/login.html<br>
+      • lahat ng pahina sa content/
+    </div>
+
+    <div class="step">
+      <p><strong>Hakbang 1:</strong> Pindutin ang pindutan sa ibaba</p>
+    </div>
+
+    <button class="btn btn-primary" onclick="burahinAngCache()">
+      🧹 BURAHIN ANG CACHE NG LAHAT NG PAHINA
+    </button>
+
+    <div class="step" id="step-2" style="display:none;">
+      <p><strong>Hakbang 2:</strong> Pumunta sa Admin — GUMAGAMIT NA NG BAGONG BERSYON!</p>
+    </div>
+
+    <button id="go-admin-btn" class="btn btn-success" style="display:none;" onclick="pumuntaSaAdmin()">
+      🚀 PUMUNTA SA ADMIN — BAGONG BERSYON
+    </button>
+
+    <hr style="margin:20px 0; border:none; border-top:1px solid #e5e5e5;">
+
+    <button class="btn btn-secondary" onclick="bukasSaBagongTab()">
+      📂 Buksan sa Bagong Tab (Kung ayaw pa rin magbago)
+    </button>
+  </div>
+</div>
+
+<script>
+const BASE_URL = window.location.origin + window.location.pathname.replace('/cache-clear.html', '');
+
+function burahinAngCache() {
+  const status = document.getElementById('status-box');
+  status.className = 'status wait';
+  status.innerHTML = '⏳ Binubura ang cache...';
+
+  // ✅ BAGONG TIMESTAMP — LAGING BAGO ANG URL
+  const t = Date.now();
+
+  // ✅ Pilitin ang pagbasa ng BAGONG kopya — pre-fetch nang walang cache
+  Promise.allSettled([
+    fetch(`sidebar.html?v=${t}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }),
+    fetch(`admin.html?v=${t}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }),
+    fetch(`content/dashboard.html?v=${t}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }),
+    fetch(`content/login.html?v=${t}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } })
+  ]).then(() => {
+    // ✅ Burahin ang browser cache kung pwede
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(n => caches.delete(n));
+      });
+    }
+
+    // ✅ Tagumpay
+    status.className = 'status ok';
+    status.innerHTML = '✅ <strong>NAIBURA NA ANG CACHE!</strong><br>Lahat ng pahina ay babasahin mula sa GitHub — hindi mula sa lumang kopya.';
+
+    document.getElementById('step-2').style.display = 'block';
+    document.getElementById('go-admin-btn').style.display = 'block';
+
+    // ✅ I-save ang kasalukuyang timestamp para gamitin sa admin
+    localStorage.setItem('wp_last_cache_bust', t);
+  });
+}
+
+function pumuntaSaAdmin() {
+  const t = localStorage.getItem('wp_last_cache_bust') || Date.now();
+  // ✅ Pumunta sa admin — may nakakabit na timestamp para siguradong bago
+  window.location.href = `admin.html?v=${t}`;
+}
+
+function bukasSaBagongTab() {
+  const t = Date.now();
+  window.open(`admin.html?v=${t}`, '_blank');
+}
+</script>
+</body>
+</html>
