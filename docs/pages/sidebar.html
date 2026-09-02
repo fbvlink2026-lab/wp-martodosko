@@ -66,7 +66,7 @@
 .drag-handle { font-size: 12px; opacity: 0.4; }
 </style>
 
-<script src="js/logic.js"></script>
+<!-- ✅ TINANGGAL NA: <script src="js/logic.js"></script> — NASA admin.html NA! -->
 
 <script>
 (function() {
@@ -92,77 +92,6 @@
       detail: { closed: sb.classList.contains('collapsed') }
     }));
   };
-
-  // ==================================================
-  // ✅ ONLINE / OFFLINE STATUS
-  // ==================================================
-  const SESSION_KEY = 'wp_session_active';
-  const SESSION_USER = 'wp_gh_user';
-
-  function updateOnlineStatus() {
-    const badge = document.getElementById('connection-badge');
-    if (!badge) return;
-    if (navigator.onLine) {
-      badge.textContent = 'ONLINE';
-      badge.classList.add('online');
-    } else {
-      badge.textContent = 'OFFLINE';
-      badge.classList.remove('online');
-    }
-  }
-  updateOnlineStatus();
-  window.addEventListener('online', updateOnlineStatus);
-  window.addEventListener('offline', updateOnlineStatus);
-
-  // ==================================================
-  // ✅ LOGIN / SESSION DETECTION
-  // ==================================================
-  function updateUserStatusDisplay() {
-    const user = localStorage.getItem(SESSION_USER);
-    const active = localStorage.getItem(SESSION_KEY) === 'true';
-    const display = document.getElementById('user-display');
-    const logoutBtn = document.getElementById('logout-btn');
-
-    if (active && user && display) {
-      display.textContent = '👤 ' + user;
-      display.classList.add('online');
-      if (logoutBtn) logoutBtn.style.display = 'inline-block';
-    } else if (display) {
-      display.textContent = '🔐 Hindi Naka-setup';
-      display.classList.remove('online');
-      if (logoutBtn) logoutBtn.style.display = 'none';
-    }
-  }
-  updateUserStatusDisplay();
-
-  // ✅ BANTAY TUWING MAGBABAGO ANG SESYON
-  let lastSessionState = localStorage.getItem(SESSION_KEY);
-  let lastUser = localStorage.getItem(SESSION_USER);
-
-  setInterval(() => {
-    const currentState = localStorage.getItem(SESSION_KEY);
-    const currentUser = localStorage.getItem(SESSION_USER);
-    if (currentState !== lastSessionState || currentUser !== lastUser) {
-      lastSessionState = currentState;
-      lastUser = currentUser;
-      updateUserStatusDisplay();
-      if (typeof renderSidebarMenu === 'function') renderSidebarMenu();
-    }
-  }, 300);
-
-  // ✅ PAGKABUKAS — SIGURADUHIN TAMA AGAD
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(updateUserStatusDisplay, 50);
-    setTimeout(updateOnlineStatus, 100);
-  });
-
-  // ✅ KAPAG NAGBAGO SA IBANG TAB
-  window.addEventListener('storage', (e) => {
-    if (e.key === SESSION_KEY || e.key === SESSION_USER) {
-      updateUserStatusDisplay();
-      lastSessionState = localStorage.getItem(SESSION_KEY);
-    }
-  });
 
   // ==================================================
   // ✅ SWIPE DETECTION — KALIWA / KANAN + SENYAL
