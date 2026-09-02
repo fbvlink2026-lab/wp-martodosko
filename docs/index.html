@@ -6,19 +6,310 @@
   <title>WP Martodosko</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; font-family:system-ui,-apple-system,sans-serif; }
-    body { background:linear-gradient(135deg,#007cba 0%,#2271b1 100%); min-height:100vh; display:flex; align-items:center; justify-content:center; color:white; text-align:center; padding:20px; }
-    .card { background:rgba(255,255,255,0.1); padding:40px 30px; border-radius:12px; backdrop-filter:blur(10px); max-width:400px; width:100%; }
-    h1 { font-size:28px; margin-bottom:10px; }
-    p { margin-bottom:25px; opacity:0.9; }
-    a { display:inline-block; background:white; color:#007cba; padding:12px 30px; border-radius:6px; text-decoration:none; font-weight:600; transition:transform 0.2s; }
-    a:hover { transform:scale(1.05); }
+    body { background:#f0f0f1; color:#3c434a; overflow-x:hidden; }
+
+    /* ===== ☰ BUKAS BUTTON — SA KALIWA-TAAS ===== */
+    #bukas-btn {
+      position:fixed; top:15px; left:15px; z-index:1100;
+      width:44px; height:44px; border:none; border-radius:6px;
+      background:#007cba; color:white; cursor:pointer;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:5px; transition: opacity 0.2s, visibility 0.2s;
+      opacity:1; visibility:visible; /* ✅ NAKIKITA SA UNA */
+    }
+    #bukas-btn.nakatago {
+      opacity:0; visibility:hidden; /* ✅ NAWALA PAG BINUKSAN ANG SIDEBAR */
+    }
+    #bukas-btn:hover { background:#0090d0; }
+    #bukas-btn span {
+      display:block; width:22px; height:2px; background:white;
+      border-radius:2px;
+    }
+
+    /* ===== SIDEBAR ===== */
+    #sidebar {
+      position:fixed; top:0; left:0; width:270px; height:100vh;
+      background:#2c3338; color:#fff; padding:20px; padding-top:55px;
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      z-index:1050;
+      display:flex; flex-direction:column; gap:14px;
+      box-shadow:2px 0 8px rgba(0,0,0,0.15);
+    }
+    #sidebar.bukas { transform: translateX(0); }
+
+    /* ===== ✕ TAKLO BUTTON — SA KANAN-TAAS ===== */
+    #taklo-btn {
+      position:absolute; top:12px; right:12px;
+      width:36px; height:36px; border:none; border-radius:4px;
+      background:transparent; color:#aaa; font-size:22px;
+      cursor:pointer; line-height:1; transition:all 0.2s;
+    }
+    #taklo-btn:hover { background:rgba(255,255,255,0.15); color:#fff; }
+
+    #sidebar h2 { font-size:18px; margin-bottom:4px; color:#fff; }
+    #sidebar .bersyon { font-size:13px; color:#aeb1b5; }
+
+    /* ===== KATAYUAN — SIMPLE LANG ===== */
+    .katayuan {
+      display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:6px; font-size:14px;
+      transition: all 0.3s ease;
+    }
+    .katayuan.offline { background:#3c3c3c; color:#b9b9b9; }
+    .katayuan.online { background:#006509; color:#bfffbf; }
+    .tuldok { width:10px; height:10px; border-radius:50%; }
+    .katayuan.offline .tuldok { background:#888; }
+    .katayuan.online .tuldok { background:#4fff4f; box-shadow:0 0 6px #4fff4f; }
+
+    /* ===== DOWNLOAD AREA ===== */
+    .download-btn {
+      background:#007cba; color:white; border:none; padding:12px 16px; border-radius:6px;
+      font-size:14px; font-weight:500; cursor:pointer; transition:background 0.2s; width:100%;
+    }
+    .download-btn:hover { background:#0090d0; }
+    .download-btn:disabled { background:#555; color:#999; cursor:not-allowed; }
+
+    .apk-pangalan {
+      font-size:12px; color:#999; margin-top:6px; text-align:center;
+      word-break:break-all;
+    }
+    .may-update {
+      background:#006509; color:#bfffbf; padding:8px 12px; border-radius:4px;
+      font-size:13px; margin-top:8px; display:none;
+    }
+    .may-update.visible { display:block; }
+
+    /* ===== TABON ===== */
+    #tabon {
+      position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.4); z-index:1000;
+      opacity:0; visibility:hidden; transition:0.2s;
+    }
+    #tabon.bukas { opacity:1; visibility:visible; }
+
+    /* ===== LAMAN ===== */
+    #laman {
+      padding:70px 20px 30px; min-height:100vh;
+    }
+    .card { background:white; border:1px solid #c3c4c7; border-radius:4px; padding:24px; max-width:700px; margin:0 auto 20px; }
+    h1 { font-size:26px; margin-bottom:12px; color:#1d2327; }
+    .paglalarawan { color:#50575e; font-size:15px; margin-bottom:20px; line-height:1.6; }
+    .loader { text-align:center; padding:30px; color:#666; }
+    .walang-internet { color:#d63638; padding:15px; background:#fff1f1; border-radius:4px; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>🌐 WP Martodosko</h1>
-    <p>Website — Parang WordPress sa GitHub Pages</p>
-    <a href="pages/admin.html">➡️ Pumunta sa Admin</a>
+
+  <!-- ☰ BUKAS BUTTON — NAKIKITA SA UNA -->
+  <button id="bukas-btn" aria-label="Buksan ang Menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <div id="tabon"></div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <!-- ✕ TAKLO BUTTON -->
+    <button id="taklo-btn" aria-label="Isara">✕</button>
+
+    <h2>WP Martodosko</h2>
+    <div class="bersyon" id="bersyon-teksto">Bersyon — Binabasa...</div>
+    <hr style="border:0; border-top:1px solid #444; margin:4px 0 10px;">
+
+    <div id="katayuan" class="katayuan offline">
+      <span class="tuldok"></span>
+      <span id="katayuan-teksto">Offline</span>
+    </div>
+
+    <button id="download-apk" class="download-btn" disabled>📥 I-download ang APK</button>
+    <div class="apk-pangalan" id="apk-pangalan">—</div>
+    <div class="may-update" id="update-banner">✅ May Bagong Bersyon — Pwede ka na Mag-update!</div>
+
+    <div style="margin-top:auto; font-size:12px; color:#888;">
+      GitHub: FBVLink2026-lab/wp-martodosko
+    </div>
   </div>
+
+  <div id="laman">
+    <div class="card">
+      <h1>🌐 WP Martodosko</h1>
+      <p class="paglalarawan">Isang sistema na parang WordPress — tumatakbo direkta mula sa GitHub Pages. Hindi kailangang mag-login para mabasa ang pampublikong nilalaman.</p>
+      <a href="pages/content/login.html" style="display:inline-block; background:#007cba; color:white; padding:10px 20px; border-radius:4px; text-decoration:none; font-weight:500; margin:10px 0;">➡️ Pumunta sa Admin →</a>
+    </div>
+
+    <div class="card">
+      <h2>📄 Mula sa Dokumentasyon</h2>
+      <div id="docs-laman">
+        <div class="loader">⏳ Binabasa mula sa GitHub...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ==================================================
+  // 📂 SIDEBAR — BUKAS / TAKLO
+  // ==================================================
+  const SIDEBAR = document.getElementById('sidebar');
+  const BUKAS_BTN = document.getElementById('bukas-btn');
+  const TAKLO_BTN = document.getElementById('taklo-btn');
+  const TABON = document.getElementById('tabon');
+  let simulaX = 0;
+
+  function iBukasSidebar() {
+    SIDEBAR.classList.add('bukas');
+    TABON.classList.add('bukas');
+    BUKAS_BTN.classList.add('nakatago'); // ✅ NAWALA ANG ☰ PAG BINUKSAN
+  }
+
+  function iTakloSidebar() {
+    SIDEBAR.classList.remove('bukas');
+    TABON.classList.remove('bukas');
+    BUKAS_BTN.classList.remove('nakatago'); // ✅ BUMABALIK ANG ☰ PAG TINAKLO
+  }
+
+  // ✅ Pindutin ang ☰ → BUKAS + NAWALA ANG ☰
+  BUKAS_BTN.addEventListener('click', iBukasSidebar);
+
+  // ✅ Pindutin ang ✕ → TAKLO + BUMABALIK ANG ☰
+  TAKLO_BTN.addEventListener('click', iTakloSidebar);
+
+  // ✅ Pindutin sa labas → TAKLO + BUMABALIK ANG ☰
+  TABON.addEventListener('click', iTakloSidebar);
+
+  // ==================================================
+  // 👆 SWIPE — PARA BUKASIN AT TAKLOHIN
+  // ==================================================
+  SIDEBAR.addEventListener('touchstart', e => { simulaX = e.touches[0].clientX; }, {passive:true});
+  SIDEBAR.addEventListener('touchmove', e => {
+    if (e.touches[0].clientX - simulaX < -50) iTakloSidebar();
+  }, {passive:true});
+
+  document.addEventListener('touchstart', e => {
+    if (!SIDEBAR.classList.contains('bukas') && e.touches[0].clientX < 30)
+      simulaX = e.touches[0].clientX;
+  }, {passive:true});
+  document.addEventListener('touchmove', e => {
+    if (!SIDEBAR.classList.contains('bukas') && simulaX && e.touches[0].clientX - simulaX > 50) {
+      iBukasSidebar(); simulaX = 0;
+    }
+  }, {passive:true});
+
+  // ==================================================
+  // 📥 BASAHIN ANG APK MULA SA docs/
+  // ==================================================
+  const GH_API_DOCS = 'https://api.github.com/repos/fbvlink2026-lab/wp-martodosko/contents/docs/';
+  const BTN_DOWNLOAD = document.getElementById('download-apk');
+  const APK_PANGALAN = document.getElementById('apk-pangalan');
+  const BERSYON_TEKSTO = document.getElementById('bersyon-teksto');
+  const UPDATE_BANNER = document.getElementById('update-banner');
+  let APK_DOWNLOAD_LINK = '';
+  const LOCAL_VERSION = localStorage.getItem('wp_installed_version') || null;
+
+  async function iBasaAngApkMulaSaDocs() {
+    if (!navigator.onLine) {
+      APK_PANGALAN.textContent = 'Walang koneksyon';
+      BERSYON_TEKSTO.textContent = 'Bersyon — Hindi mabasa';
+      return;
+    }
+
+    try {
+      const sagot = await fetch(GH_API_DOCS, { cache: 'no-store' });
+      if (!sagot.ok) throw new Error('Hindi makonekta');
+      const mgaFile = await sagot.json();
+
+      const apkFile = mgaFile.find(f => f.name.toLowerCase().endsWith('.apk'));
+      if (!apkFile) {
+        APK_PANGALAN.textContent = 'Walang nakitang APK';
+        BERSYON_TEKSTO.textContent = 'Bersyon — Wala pa';
+        return;
+      }
+
+      APK_PANGALAN.textContent = apkFile.name;
+      APK_DOWNLOAD_LINK = apkFile.download_url;
+
+      const bersyonMatch = apkFile.name.match(/v?(\d+(?:\.\d+)+)/i);
+      const bersyonNasaRepo = bersyonMatch ? bersyonMatch[1] : '1.0.0';
+      BERSYON_TEKSTO.textContent = `Bersyon: ${bersyonNasaRepo}`;
+
+      if (LOCAL_VERSION && LOCAL_VERSION !== bersyonNasaRepo) {
+        UPDATE_BANNER.classList.add('visible');
+      } else {
+        UPDATE_BANNER.classList.remove('visible');
+      }
+
+      BTN_DOWNLOAD.disabled = !APK_DOWNLOAD_LINK;
+
+    } catch (mali) {
+      APK_PANGALAN.textContent = `Error: ${mali.message}`;
+    }
+  }
+
+  BTN_DOWNLOAD.addEventListener('click', () => {
+    if (!APK_DOWNLOAD_LINK) return alert('❌ Wala pang nakitang APK');
+    window.open(APK_DOWNLOAD_LINK, '_blank');
+    const bersyonMatch = APK_PANGALAN.textContent.match(/v?(\d+(?:\.\d+)+)/i);
+    if (bersyonMatch) localStorage.setItem('wp_installed_version', bersyonMatch[1]);
+    UPDATE_BANNER.classList.remove('visible');
+    iTakloSidebar();
+  });
+
+  // ==================================================
+  // 🟢 ONLINE / OFFLINE — SIMPLE LANG
+  // ==================================================
+  const KATAYUAN = document.getElementById('katayuan');
+  const TEKSTO_KATAYUAN = document.getElementById('katayuan-teksto');
+
+  function iupdateKatayuan() {
+    const nakaOnline = navigator.onLine;
+    if (nakaOnline) {
+      KATAYUAN.classList.remove('offline');
+      KATAYUAN.classList.add('online');
+      TEKSTO_KATAYUAN.textContent = 'Online';
+      BTN_DOWNLOAD.disabled = !APK_DOWNLOAD_LINK;
+      iBasaAngApkMulaSaDocs();
+    } else {
+      KATAYUAN.classList.remove('online');
+      KATAYUAN.classList.add('offline');
+      TEKSTO_KATAYUAN.textContent = 'Offline';
+      BTN_DOWNLOAD.disabled = true;
+    }
+  }
+  window.addEventListener('online', iupdateKatayuan);
+  window.addEventListener('offline', iupdateKatayuan);
+  iupdateKatayuan();
+
+  // ==================================================
+  // 📄 BASAHIN ANG docs/
+  // ==================================================
+  const DOCS_LALAGYAN = document.getElementById('docs-laman');
+
+  async function ibasaAngDocs() {
+    if (!navigator.onLine) {
+      DOCS_LALAGYAN.innerHTML = `<div class="walang-internet">⚠️ Walang internet — hindi mabasa ang pampublikong dokumentasyon.</div>`;
+      return;
+    }
+    try {
+      const sagot = await fetch(GH_API_DOCS, { cache: 'no-store' });
+      if (!sagot.ok) throw new Error('Hindi makonekta sa GitHub');
+      const mgaFile = await sagot.json();
+      let html = '<p style="color:#007cba; font-weight:500;">📁 Mga Pampublikong Pahina:</p><ul style="margin:10px 0 10px 20px;">';
+      mgaFile.forEach(f => {
+        if (f.name.endsWith('.apk')) return;
+        if (f.type === 'file' && f.name.endsWith('.html'))
+          html += `<li style="margin:4px 0;"><a href="${f.download_url}" target="_blank" style="color:#007cba; text-decoration:none;">${f.name}</a></li>`;
+        else if (f.type === 'dir')
+          html += `<li style="margin:4px 0; font-weight:500; color:#555;">📂 ${f.name}/</li>`;
+      });
+      html += '</ul>';
+      DOCS_LALAGYAN.innerHTML = html;
+    } catch (mali) {
+      DOCS_LALAGYAN.innerHTML = `<div style="color:#d63638; padding:10px; background:#fff1f1; border-radius:4px;">❌ ${mali.message}</div>`;
+    }
+  }
+  ibasaAngDocs();
+  </script>
+
 </body>
 </html>
