@@ -1,35 +1,219 @@
-<h1>🔐 Akawnt at GitHub Token</h1>
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gumawa ng Akawnt — WP Martodosko</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:system-ui,-apple-system,sans-serif; }
+    body { background:#f0f0f1; color:#3c434a; padding:20px; }
+    .container { max-width:580px; margin:0 auto; }
+    h1 { font-size:24px; margin-bottom:25px; color:#1d2327; text-align:center; }
+    .card { background:white; border:1px solid #c3c4c7; border-radius:4px; padding:22px; margin-bottom:18px; }
+    h3 { font-size:16px; margin-bottom:12px; color:#1d2327; }
+    p { color:#50575e; font-size:14px; margin-bottom:15px; line-height:1.6; }
+    table { width:100%; border-collapse:collapse; margin:12px 0; }
+    th { padding:9px; text-align:left; font-weight:500; color:#1d2327; width:140px; vertical-align:top; }
+    td { padding:9px; }
+    input { width:100%; padding:9px; border:1px solid #c3c4c7; border-radius:4px; font-size:15px; }
+    input:focus { outline:none; border-color:#007cba; }
+    .btn { padding:11px 18px; border:none; border-radius:4px; font-size:15px; font-weight:500; cursor:pointer; transition:background 0.2s; }
+    .btn-primary { background:#007cba; color:white; width:100%; margin-top:8px; }
+    .btn-primary:hover { background:#0090d0; }
+    .btn-secondary { background:#e5e5e5; color:#3c434a; margin-top:6px; }
+    .btn-secondary:hover { background:#dcdcde; }
+    .btn-sm { padding:6px 12px; font-size:14px; width:auto; }
+    .repo-list { margin-top:12px; max-height:260px; overflow-y:auto; border:1px solid #c3c4c7; border-radius:4px; }
+    .repo-item { padding:10px 14px; border-bottom:1px solid #e5e5e5; cursor:pointer; transition:background 0.15s; }
+    .repo-item:last-child { border-bottom:none; }
+    .repo-item:hover { background:#f0f6fc; }
+    .repo-item.napili { background:#e5f0fa; border-left:3px solid #007cba; }
+    .repo-name { font-weight:500; color:#1d2327; }
+    .repo-desc { font-size:13px; color:#666; margin-top:2px; }
+    .loading { padding:20px; text-align:center; color:#666; }
+    .notice { padding:10px 14px; border-radius:4px; font-size:14px; margin-top:12px; display:none; }
+    .notice.show { display:block; }
+    .notice.info { background:#e5f5fa; color:#004e69; border-left:4px solid #00a0d2; }
+    .back-link { display:inline-block; margin-top:15px; color:#007cba; text-decoration:none; font-size:14px; }
+    .back-link:hover { text-decoration:underline; }
+    .inline-group { display:flex; gap:8px; align-items:center; }
+    .inline-group input { flex:1; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🔐 Akawnt at GitHub Token</h1>
 
-<div class="card">
-  <h3>🔑 Gumawa ng Password</h3>
-  <p style="color:#666; font-size:14px;">Ang password mo ang magiging susi para i-lock ang iyong GitHub Token. <strong>Hindi na hihingin ulit tuwing ise-save — awtomatikong binubukas sa likuran.</strong></p>
+  <!-- ✅ PASSWORD SECTION -->
+  <div class="card">
+    <h3>🔑 Gumawa ng Password</h3>
+    <p style="color:#666; font-size:14px;">Ang password mo ang magiging susi para i-lock ang iyong GitHub Token. <strong>Hindi na hihingin ulit tuwing ise-save — awtomatikong binubukas sa likuran.</strong></p>
 
-  <table style="width:100%; border-collapse:collapse; margin:15px 0;">
-    <tr>
-      <th style="width:220px; padding:10px; text-align:left;">Password:</th>
-      <td style="padding:10px;">
-        <input type="password" id="user-password" placeholder="Sarili mong password" style="width:280px; padding:8px; border:1px solid #c3c4c7; border-radius:4px;">
-      </td>
-    </tr>
-    <tr>
-      <th style="padding:10px; text-align:left;">I-ulit:</th>
-      <td style="padding:10px;">
-        <input type="password" id="user-password-confirm" placeholder="I-ulit ang password" style="width:280px; padding:8px; border:1px solid #c3c4c7; border-radius:4px;">
-      </td>
-    </tr>
-  </table>
+    <table>
+      <tr>
+        <th>Password:</th>
+        <td>
+          <input type="password" id="user-password" placeholder="Sarili mong password">
+        </td>
+      </tr>
+      <tr>
+        <th>I-ulit:</th>
+        <td>
+          <input type="password" id="user-password-confirm" placeholder="I-ulit ang password">
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ✅ GITHUB TOKEN + REPO LIST SECTION -->
+  <div class="card">
+    <h3>🔐 GitHub Token</h3>
+    <table>
+      <tr>
+        <th>Token:</th>
+        <td>
+          <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxx" oninput="iSubukanToken()">
+        </td>
+      </tr>
+      <tr>
+        <th>Username:</th>
+        <td>
+          <div class="inline-group">
+            <input type="text" id="gh-username" placeholder="FBVLink2026-lab" oninput="iHanapinMgaRepo()">
+            <button class="btn btn-secondary btn-sm" onclick="iHanapinMgaRepo()">🔍 Ilista</button>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <th>Repository:</th>
+        <td>
+          <input type="text" id="repo-pili" placeholder="— Pumili sa ibaba —" readonly style="background:#f9f9f9;">
+        </td>
+      </tr>
+    </table>
+
+    <!-- ✅ LISTAHAN NG REPOSITORY — KUSANG LILABAS -->
+    <div class="repo-list" id="repo-listahan" style="display:none;">
+      <div class="loading" id="repo-nagloload">⏳ Kinukuha ang listahan...</div>
+      <div id="repo-mga-item"></div>
+    </div>
+
+    <div class="notice info" id="repo-abiso">
+      💡 Ipasok ang Token at Username → pindutin ang "Ilista" → piliin ang repository mula sa listahan.
+    </div>
+  </div>
+
+  <!-- ✅ IPAGTAPOS BUTTON -->
+  <button class="btn btn-primary" onclick="iTaposinAngPaglikha()">✅ Gumawa at I-save ang Akawnt</button>
+
+  <a href="login.html" class="back-link">← Balik sa Pag-login</a>
 </div>
 
-<div class="card">
-  <h3>🔐 GitHub Token</h3>
-  <table style="width:100%; border-collapse:collapse; margin:15px 0;">
-    <tr>
-      <th style="width:220px; padding:10px; text-align:left;">Token:</th>
-      <td style="padding:10px;">
-        <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxx" style="width:280px; padding:8px; border:1px solid #c3c4c7; border-radius:4px;">
-      </td>
-    </tr>
-    <tr>
-      <th style="padding:10px; text-align:left;">Repository:</th>
-      <td style="padding:10px;">
-        <input type="text" id="gh-username" placeholder="FBVLink2026-lab" style="width:130px; padding:8px; border:1px solid #c3c4c7; border-radius:4
+<script>
+// ==================================================
+// ✅ HANAPIN ANG MGA REPOSITORY NG USER
+// ==================================================
+const GH_API_BASE = 'https://api.github.com';
+let NAPILING_REPO = null;
+
+async function iHanapinMgaRepo() {
+  const username = document.getElementById('gh-username').value.trim();
+  const token = document.getElementById('github-token').value.trim();
+  const listahanDiv = document.getElementById('repo-listahan');
+  const loadingDiv = document.getElementById('repo-nagloload');
+  const itemsDiv = document.getElementById('repo-mga-item');
+  const abisoDiv = document.getElementById('repo-abiso');
+
+  if (!username) return alert('❌ Ipasok muna ang GitHub Username.');
+  if (!token) return alert('❌ Ipasok muna ang GitHub Token.');
+
+  listahanDiv.style.display = 'block';
+  loadingDiv.style.display = 'block';
+  itemsDiv.innerHTML = '';
+  abisoDiv.classList.remove('show');
+
+  try {
+    // ✅ KUKUHAIN ANG LAHAT NG REPOSITORY NG USER
+    const sagot = await fetch(`${GH_API_BASE}/users/${username}/repos?per_page=100&sort=pushed`, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+
+    if (!sagot.ok) throw new Error(`Hindi makakuha: ${sagot.status}`);
+    const mgaRepo = await sagot.json();
+
+    loadingDiv.style.display = 'none';
+
+    if (!mgaRepo.length) {
+      itemsDiv.innerHTML = `<div class="loading">⚠️ Walang nakitang repository.</div>`;
+      return;
+    }
+
+    // ✅ IPALIT SA LISTAHAN — PWEDENG PINDUTIN
+    mgaRepo.forEach(repo => {
+      const div = document.createElement('div');
+      div.className = 'repo-item';
+      div.innerHTML = `
+        <div class="repo-name">📁 ${repo.name}</div>
+        <div class="repo-desc">${repo.description || '(Walang paglalarawan)'}</div>
+      `;
+      div.onclick = () => {
+        // ✅ PUMILI NG REPO
+        document.querySelectorAll('.repo-item').forEach(el => el.classList.remove('napili'));
+        div.classList.add('napili');
+        NAPILING_REPO = repo.full_name;
+        document.getElementById('repo-pili').value = repo.full_name;
+      };
+      itemsDiv.appendChild(div);
+    });
+
+  } catch (mali) {
+    loadingDiv.style.display = 'none';
+    itemsDiv.innerHTML = `<div class="loading" style="color:#d63638;">❌ ${mali.message}</div>`;
+  }
+}
+
+// ==================================================
+// ✅ PAG TAPOS NA — I-SAVE ANG LAHAT
+// ==================================================
+function iTaposinAngPaglikha() {
+  const password = document.getElementById('user-password').value.trim();
+  const confirmPass = document.getElementById('user-password-confirm').value.trim();
+  const token = document.getElementById('github-token').value.trim();
+  const username = document.getElementById('gh-username').value.trim();
+
+  // ✅ PAGSUSURI NG PASSWORD
+  if (!password) return alert('❌ Gumawa muna ng password.');
+  if (password !== confirmPass) return alert('❌ Hindi tugma ang password — ulitin muli.');
+  if (password.length < 6) return alert('❌ Dapat hindi bababa sa 6 na titik ang password.');
+
+  // ✅ PAGSUSURI NG TOKEN AT REPO
+  if (!token) return alert('❌ Ipasok ang iyong GitHub Token.');
+  if (!username) return alert('❌ Ipasok ang iyong GitHub Username.');
+  if (!NAPILING_REPO) return alert('❌ Pumili muna ng Repository mula sa listahan.');
+
+  // ✅ I-SAVE SA LOCALSTORAGE
+  localStorage.setItem('wp_user_password', password); // ✅ Sa aktuwal na gamit — dapat naka-encrypt!
+  localStorage.setItem('wp_github_token', token);
+  localStorage.setItem('wp_github_username', username);
+  localStorage.setItem('wp_github_repo', NAPILING_REPO);
+
+  // ✅ LUMIKHA NG SESSION AGAD
+  localStorage.setItem('wp_session_active', 'true');
+  localStorage.setItem('wp_session_expiry', Date.now() + (2 * 60 * 60 * 1000)); // 2 oras
+
+  alert(`✅ Matagumpay na nalikha ang akawnt!\n\n📂 Repository: ${NAPILING_REPO}\n\nPupunta na sa Dashboard...`);
+  window.location.href = 'dashboard.html';
+}
+
+// ==================================================
+// ✅ PAGBABAGO NG TOKEN — KUSANG ILISTA AGAD
+// ==================================================
+function iSubukanToken() {
+  // Kung may username na, kusang ilista
+  const username = document.getElementById('gh-username').value.trim();
+  const token = document.getElementById('github-token').value.trim();
+  if (username && token.length >= 20) iHanapinMgaRepo();
+}
+</script>
+</body>
+</html>
