@@ -8,21 +8,22 @@
     * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
     body { background:#f0f0f1; color:#3c434a; }
 
-    /* ===== SIDEBAR — LAGING NASA KALIWA ===== */
-    #sidebar-container {
-      position:fixed; top:0; left:0; width:180px; height:100vh;
-      background:#1d2327; color:#fff; overflow-y:auto; z-index:900;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-      transform: translateX(-100%); opacity:0;
-    }
-    #sidebar-container.nakabukas { transform: translateX(0); opacity:1; }
+    /* ==================================================
+       ✅ HINDI NA DITO ANG SIDEBAR POSISYON — NASA sidebar.html NA!
+       ================================================== */
 
-    /* ===== LAMAN — NASA KANAN ===== */
+    /* ===== LAMAN — NASA KANAN — AYUSIN AYON SA KONDISYON NG SIDEBAR ===== */
     .content-wrapper {
-      margin-left:0; padding:0; min-height:100vh;
+      margin-left: 180px; /* ✅ Kapag bukas ang sidebar — katumbas ng lapad nito */
+      padding: 0;
+      min-height: 100vh;
       transition: margin-left 0.3s ease;
     }
-    .content-wrapper.sidebar-bukas { margin-left:180px; }
+
+    /* ✅ Kapag sarado ang sidebar — ibalik sa gilid */
+    .content-wrapper.sidebar-closed {
+      margin-left: 0;
+    }
 
     /* ===== DITO ILALAGAY ANG LAHAT NG PAHINA ===== */
     #page-content { min-height:100vh; }
@@ -33,17 +34,16 @@
     }
   </style>
 
-  <!-- ❌ TINANGGAL NA: <script src="js/logic.js"></script> -->
-  <!-- ✅ DAHIL NAKAKABIT NA ANG logic.js SA LOOB NG sidebar.html — HINDI NA DAPAT DITO -->
+  <!-- ❌ TINANGGAL NA: sariling posisyon/lapad ng sidebar — nasa sidebar.html na -->
 </head>
 <body>
 
-  <!-- ✅ SIDEBAR — docs/pages/sidebar.html — DITO NAKAKABIT ANG logic.js -->
-  <div id="sidebar-container">
+  <!-- ✅ SIDEBAR — kinakarga mula sa sidebar.html — SARILI NIYANG POSISYON! -->
+  <div id="sidebar-placeholder">
     <div style="padding:20px;">⏳ Binabasa ang Menu...</div>
   </div>
 
-  <!-- ✅ DITO LAGI MAGKAKALAGAY -->
+  <!-- ✅ DITO LAGI MAGKAKALAGAY ANG NILALAMAN -->
   <main class="content-wrapper" id="content-wrapper">
     <div id="page-content">
       <div class="loading-screen">
@@ -53,7 +53,7 @@
   </main>
 
   <!-- ==================================================
-       📌 SESSION KEYS — LOKAL LANG SA ADMIN.HTML
+       📌 SESSION KEYS
        ================================================== -->
   <script>
     const SESSION_KEY = 'wp_session_active';
@@ -62,12 +62,11 @@
     const SESSION_DURATION = 2 * 60 * 60 * 1000;
 
     const LALAGYAN = document.getElementById('page-content');
-    const SIDEBAR = document.getElementById('sidebar-container');
     const WRAPPER = document.getElementById('content-wrapper');
   </script>
 
   <!-- ==================================================
-       📄 KARGAHIN: docs/pages/content/
+       📄 KARGAHIN ANG PAHINA
        ================================================== -->
   <script>
     async function ikargaAngPahina(daan) {
@@ -110,19 +109,31 @@
   </script>
 
   <!-- ==================================================
-       📌 KARGAHIN SIDEBAR — docs/pages/sidebar.html
-       ✅ KASAMA NA ANG logic.js SA LOOB NITO
+       📌 KARGAHIN SIDEBAR — SARILI NIYANG POSISYON!
        ================================================== -->
   <script>
     async function ikargaAngSidebar() {
       try {
         const sagot = await fetch('sidebar.html');
         if (sagot.ok) {
-          SIDEBAR.innerHTML = await sagot.text();
-          // ✅ Ang logic.js ay kusang tatakbo galing sa sidebar.html
+          document.getElementById('sidebar-placeholder').outerHTML = await sagot.text();
+          
+          // ✅ I-sabay ang paggalaw ng laman sa pagbukas/pagsara ng sidebar
+          setTimeout(() => {
+            const sb = document.getElementById('sidebar');
+            if (sb) {
+              // Obserbahan kung kailan nagbabago ang klase ng sidebar
+              new MutationObserver(() => {
+                WRAPPER.classList.toggle('sidebar-closed', sb.classList.contains('collapsed'));
+              }).observe(sb, { attributes: true, attributeFilter: ['class'] });
+              
+              // ✅ I-set agad ang tamang estado
+              WRAPPER.classList.toggle('sidebar-closed', sb.classList.contains('collapsed'));
+            }
+          }, 50);
         }
       } catch(e) {
-        SIDEBAR.innerHTML = `<div style="padding:15px; color:#ff8080;">❌ Sidebar hindi makuha</div>`;
+        console.error('Sidebar error:', e);
       }
     }
   </script>
@@ -131,19 +142,9 @@
        🎯 PANGUNAHING DALOY
        ================================================== -->
   <script>
-    async function iSimulanAngSistema() {
-      if (iMayActiveSession()) {
-        await iPumasokSaDashboard();
-      } else {
-        await ikargaAngPahina('login.html');
-        iBantayanAngLogin();
-      }
-    }
-
     async function iPumasokSaDashboard() {
-      await ikargaAngSidebar(); // ✅ Dito na kakabit ang sidebar.html + logic.js
-      SIDEBAR.classList.add('nakabukas');
-      WRAPPER.classList.add('sidebar-bukas');
+      await ikargaAngSidebar(); // ✅ Sarili niyang posisyon — walang babaguhin dito
+      WRAPPER.classList.remove('sidebar-closed');
       await ikargaAngPahina('dashboard.html');
     }
 
@@ -165,11 +166,20 @@
       localStorage.removeItem(SESSION_KEY);
       localStorage.removeItem(SESSION_EXPIRY);
       localStorage.removeItem(SESSION_USER);
-      SIDEBAR.classList.remove('nakabukas');
-      WRAPPER.classList.remove('sidebar-bukas');
+      if (typeof clearAllCredentials === 'function') clearAllCredentials();
+      WRAPPER.classList.remove('sidebar-closed');
       await ikargaAngPahina('login.html');
       iBantayanAngLogin();
     };
+
+    async function iSimulanAngSistema() {
+      if (iMayActiveSession()) {
+        await iPumasokSaDashboard();
+      } else {
+        await ikargaAngPahina('login.html');
+        iBantayanAngLogin();
+      }
+    }
 
     document.addEventListener('DOMContentLoaded', iSimulanAngSistema);
   </script>
