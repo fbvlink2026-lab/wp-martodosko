@@ -1,16 +1,86 @@
 // =========================================================
 // 🧠 WP MARTODOSKO — KUMPLETONG LOGIC.JS
-// TUGMA SA IYONG ORIHINAL NA SISTEMA — WALANG BANGGA!
+// ✅ SESSION CHECK + REPO LISTING + LAHAT NG KAILANGAN
 // =========================================================
 
 // ✅ NAKA-TABI — GINAGAMIT NG ENCRYPTION
 const STORAGE_MASTER_KEY = 'master-lock-key-only-local-not-sent-123!';
+
+// 🔐 SESSION CONSTANTS
+const SESSION_KEY = 'wp_session_active';
+const SESSION_EXPIRY = 'wp_session_expiry';
+const SESSION_USER = 'wp_gh_user';
+const SESSION_DURATION = 2 * 60 * 60 * 1000; // ⏰ 2 oras
 
 // 📋 KASALUKUYANG ESTADO
 let currentPage = 'dashboard';
 let draggedElement = null;
 let ENVIRONMENT = { isApp: false, isBrowser: true };
 let IS_ONLINE = navigator.onLine;
+let sessionTimer = null;
+
+// =========================================================
+// 🔐 SESSION MANAGEMENT — KUMPLETO NA DITO!
+// =========================================================
+
+// ✅ Suriin kung may aktibong sesyon
+function iMayActiveSession() {
+  const active = localStorage.getItem(SESSION_KEY) === 'true';
+  const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
+  return active && Date.now() < expiry;
+}
+
+// ✅ Lumikha ng bagong sesyon
+function iLumikhaNgSession() {
+  localStorage.setItem(SESSION_KEY, 'true');
+  localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
+}
+
+// ✅ Tapusin / I-clear ang sesyon
+function iTapusinAngSession() {
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_EXPIRY);
+  localStorage.removeItem(SESSION_USER);
+  if (sessionTimer) clearInterval(sessionTimer);
+}
+
+// ✅ Kunin ang natitirang oras — [oras, minuto]
+function iKuninNatitirangOras() {
+  const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
+  const natitira = expiry - Date.now();
+  if (natitira <= 0) return [0, 0];
+  const oras = Math.floor(natitira / (1000 * 60 * 60));
+  const minuto = Math.floor((natitira % (1000 * 60 * 60)) / (1000 * 60));
+  return [oras, minuto];
+}
+
+// ✅ Ipakita ang countdown — tawagin sa login.html
+function iSimulanSessionCountdown(elId = 'session-timer') {
+  if (sessionTimer) clearInterval(sessionTimer);
+  
+  const update = () => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    
+    const [oras, minuto] = iKuninNatitirangOras();
+    if (oras <= 0 && minuto <= 0) {
+      el.textContent = '❌ Nag-expire na';
+      iTapusinAngSession();
+      if (typeof loadPage === 'function') loadPage('login');
+      return;
+    }
+    el.textContent = `${oras}h ${minuto}m natitira`;
+  };
+
+  update();
+  sessionTimer = setInterval(update, 30000); // Bawat 30 segundo
+}
+
+// ✅ Palawigin ang sesyon +2 oras
+function iPalawiginSession() {
+  localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
+  alert('✅ Pinalawig pa ng 2 oras ang sesyon!');
+}
 
 // =========================================================
 // 📋 MENU — KASAMA ANG LAHAT NG PINDUTAN
@@ -63,14 +133,16 @@ function showOfflineNotice() {
   bar.style.cssText = 'position:fixed;top:0;left:180px;right:0;padding:8px 15px;background:#d63638;color:white;z-index:9999;font-size:14px;';
   bar.innerHTML = '⚠️ WALANG INTERNET — Naka-save muna sa Lokal. Awtomatikong isesend kapag nakabalik ang koneksyon.';
   document.body.prepend(bar);
-  document.getElementById('content-wrapper').style.marginTop = '38px';
+  const wrapper = document.getElementById('content-wrapper');
+  if (wrapper) wrapper.style.marginTop = '38px';
 }
 
 function hideOfflineNotice() {
   const bar = document.getElementById('global-offline-notice');
   if (bar) {
     bar.remove();
-    document.getElementById('content-wrapper').style.marginTop = '0';
+    const wrapper = document.getElementById('content-wrapper');
+    if (wrapper) wrapper.style.marginTop = '0';
   }
   setTimeout(() => synchronizeNow(), 1500);
 }
@@ -191,6 +263,34 @@ window.deleteMenuItem = id => {
 };
 
 // =========================================================
+// 📦 GITHUB REPOSITORY LISTING — PARA SA CREATE.HTML ✅
+// =========================================================
+const GH_API_BASE = 'https://api.github.com';
+let NAPILING_REPO = null;
+
+window.iHanapinMgaRepo = async function(username, token) {
+  if (!username || !token) return { ok: false, error: 'Kailangan ang Username at Token' };
+  try {
+    const sagot = await fetch(`${GH_API_BASE}/users/${username}/repos?per_page=100&sort=pushed`, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+    if (!sagot.ok) throw new Error(`Code: ${sagot.status}`);
+    return { ok: true, repos: await sagot.json() };
+  } catch (mali) {
+    return { ok: false, error: mali.message };
+  }
+};
+
+window.iPumiliNgRepo = function(repoFullName) {
+  NAPILING_REPO = repoFullName;
+  return NAPILING_REPO;
+};
+
+window.iKuninNapilingRepo = function() {
+  return NAPILING_REPO || localStorage.getItem('wp_gh_repo');
+};
+
+// =========================================================
 // 💾 OFFLINE QUEUE — PAG-SAVE SA LOKAL KAPAG WALANG INTERNET
 // =========================================================
 function getOfflineQueue() {
@@ -228,27 +328,27 @@ function updateSyncBadge() {
 // =========================================================
 // 🔄 SMART SAVE — LOKAL → GITHUB KAPAG ONLINE
 // =========================================================
-async function smartSaveFile(fileName, content, filePath) {
+window.smartSaveFile = async function(fileName, content, filePath) {
   saveToLocalQueue(fileName, content, filePath);
   if (IS_ONLINE) return await saveToGitHubDirect(fileName, content, filePath);
   alert('📡 OFFLINE — Naka-save muna sa Lokal.\n🔄 Ise-send sa GitHub kapag nakabalik na ang internet.');
   return { status: 'QUEUED', message: 'Nakaantay sa koneksyon' };
-}
+};
 
 async function synchronizeNow() {
   const statusEl = document.getElementById('sync-status');
   const syncBtn = document.getElementById('sync-btn');
-  if (!IS_ONLINE) { statusEl.textContent = '❌ Walang internet'; return; }
+  if (!IS_ONLINE) { if(statusEl) statusEl.textContent = '❌ Walang internet'; return; }
 
   const queue = getOfflineQueue();
   if (!queue.length) {
-    statusEl.textContent = '✅ Wala nang isesend';
-    setTimeout(() => statusEl.textContent = 'Handa', 2500);
+    if(statusEl) statusEl.textContent = '✅ Wala nang isesend';
+    setTimeout(() => { if(statusEl) statusEl.textContent = 'Handa'; }, 2500);
     return;
   }
 
-  syncBtn.disabled = true;
-  statusEl.textContent = `⏳ Nagsisynchronize: ${queue.length}...`;
+  if(syncBtn) syncBtn.disabled = true;
+  if(statusEl) statusEl.textContent = `⏳ Nagsisynchronize: ${queue.length}...`;
 
   let ok = 0, fail = 0;
   for (const item of queue) {
@@ -257,9 +357,9 @@ async function synchronizeNow() {
     else { item.attempts++; if (item.attempts >= 3) clearFromQueue(item.id); fail++; }
   }
 
-  syncBtn.disabled = false;
-  statusEl.textContent = `✅ Tapos: ${ok} naisave${fail ? `, ${fail} nabigo` : ''}`;
-  setTimeout(() => statusEl.textContent = 'Handa', 4000);
+  if(syncBtn) syncBtn.disabled = false;
+  if(statusEl) statusEl.textContent = `✅ Tapos: ${ok} naisave${fail ? `, ${fail} nabigo` : ''}`;
+  setTimeout(() => { if(statusEl) statusEl.textContent = 'Handa'; }, 4000);
 }
 
 // =========================================================
@@ -273,7 +373,7 @@ async function saveToGitHubDirect(fileName, content, filePath) {
   if (!user || !repo) return { ok: false, error: 'NO_REPO' };
 
   try {
-    const getRes = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/${filePath}`, {
+    const getRes = await fetch(`${GH_API_BASE}/repos/${user}/${repo}/contents/${filePath}`, {
       headers: { 'Authorization': `token ${token}` }
     });
     const sha = getRes.ok ? (await getRes.json()).sha : null;
@@ -284,7 +384,7 @@ async function saveToGitHubDirect(fileName, content, filePath) {
     };
     if (sha) body.sha = sha;
 
-    const putRes = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/${filePath}`, {
+    const putRes = await fetch(`${GH_API_BASE}/repos/${user}/${repo}/contents/${filePath}`, {
       method: 'PUT',
       headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -322,14 +422,15 @@ function decryptData(encrypted, password) {
   } catch { return null; }
 }
 
-function setupCredentials(password, token, username, repo) {
+window.setupCredentials = function(password, token, username, repo) {
   localStorage.setItem('wp_enc_token', encryptData(token, password));
   localStorage.setItem('wp_enc_pass', encryptData(password, STORAGE_MASTER_KEY));
   localStorage.setItem('wp_gh_user', username);
   localStorage.setItem('wp_gh_repo', repo);
+  iLumikhaNgSession(); // ✅ Lumikha agad ng sesyon
   updateUserStatus();
   return true;
-}
+};
 
 async function getDecryptedToken() {
   const encToken = localStorage.getItem('wp_enc_token');
@@ -346,8 +447,9 @@ function getRepoInfo() {
   };
 }
 
-function clearAllCredentials() {
+window.clearAllCredentials = function() {
   if (!confirm('🗑️ Sigurado bang burahin ang lahat?')) return;
+  iTapusinAngSession();
   localStorage.removeItem('wp_enc_token');
   localStorage.removeItem('wp_enc_pass');
   localStorage.removeItem('wp_gh_user');
@@ -357,7 +459,7 @@ function clearAllCredentials() {
   updateSyncBadge();
   if (typeof loadPage === 'function') loadPage('login');
   alert('✅ BINURA NA');
-}
+};
 
 function updateUserStatus() {
   const user = localStorage.getItem('wp_gh_user');
@@ -375,11 +477,22 @@ function updateUserStatus() {
   }
 }
 
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('collapsed');
+window.toggleSidebar = function() {
+  const sb = document.getElementById('sidebar');
+  if(sb) sb.classList.toggle('collapsed');
   const content = document.getElementById('content-wrapper');
   if (content) content.classList.toggle('sidebar-hidden');
-}
+};
+
+// ✅ I-expose ang Session functions para sa login.html
+window.iMayActiveSession = iMayActiveSession;
+window.iLumikhaNgSession = iLumikhaNgSession;
+window.iTapusinAngSession = iTapusinAngSession;
+window.iKuninNatitirangOras = iKuninNatitirangOras;
+window.iSimulanSessionCountdown = iSimulanSessionCountdown;
+window.iPalawiginSession = iPalawiginSession;
+window.getDecryptedToken = getDecryptedToken;
+window.getRepoInfo = getRepoInfo;
 
 // =========================================================
 // ✅ PAGKABUKAS — LAHAT KUSANG TUMATAKBO
@@ -398,3 +511,5 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('bagongAyosNgMenu', () => {
   renderSidebarMenu();
 });
+
+console.log('✅ WP Martodosko — logic.js KUMPLETO NA — Session + Repo Listing + Lahat');
