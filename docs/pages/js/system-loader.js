@@ -3,8 +3,8 @@ let currentFile = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    // ✅ PAREHONG FOLDER — WALANG ../ KAILANGAN!
-    const res = await fetch('sidebar.html');
+    // ✅ PROBLEMA #1 AYUSIN: + ?v=RANDOM → HINDI NA KACACHE!
+    const res = await fetch(`sidebar.html?v=${Date.now()}`);
     if (res.ok) {
       document.getElementById('sidebar-placeholder').innerHTML = await res.text();
       setTimeout(() => {
@@ -34,8 +34,8 @@ async function loadPage(pageId) {
   area.innerHTML = `<div style="padding:40px;text-align:center;"><p>⏳ Binabasa: ${pageId}...</p></div>`;
 
   try {
-    // ✅ TAMA — docs/pages/content/
-    const res = await fetch(`content/${pageId}.html`);
+    // ✅ PROBLEMA #1 AYUSIN: + ?v=RANDOM sa lahat ng pahina!
+    const res = await fetch(`content/${pageId}.html?v=${Date.now()}`);
     if (!res.ok) throw new Error(`Hindi mabasa: ${pageId}`);
     area.innerHTML = await res.text();
     runScriptsIn(area);
@@ -45,11 +45,13 @@ async function loadPage(pageId) {
   }
 }
 
+// ✅ PROBLEMA #2 AYUSIN: TAKBOHIN SA LUGAR — HUWAG ILIPAT SA <head>
 function runScriptsIn(container) {
   container.querySelectorAll('script').forEach(luma => {
     const bago = document.createElement('script');
     bago.textContent = luma.textContent;
     Array.from(luma.attributes).forEach(a => bago.setAttribute(a.name, a.value));
-    document.head.appendChild(bago).remove();
+    // ✅ DITO LANG ILAGAY — KUNG SAAN NAROROON ANG ORIHINAL
+    luma.parentNode.replaceChild(bago, luma);
   });
 }
