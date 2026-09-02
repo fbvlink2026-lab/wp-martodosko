@@ -1,6 +1,6 @@
 // =========================================================
 // 🧠 WP MARTODOSKO — KUMPLETONG LOGIC.JS
-// ✅ INAYOS: MENU LUMILITAW PAGKALOGIN + SWIPE + BUTTON + SESSION
+// ✅ LAHAT NANDITO NA: Menu Visibility + Swipe + Button + Session + Toggle + Refresh
 // =========================================================
 
 // ✅ NAKA-TABI — GINAGAMIT NG ENCRYPTION
@@ -18,9 +18,10 @@ let draggedElement = null;
 let ENVIRONMENT = { isApp: false, isBrowser: true };
 let IS_ONLINE = navigator.onLine;
 let sessionTimer = null;
+let lastSessionState = localStorage.getItem(SESSION_KEY);
 
 // =========================================================
-// 🔐 SESSION MANAGEMENT — KUMPLETO NA DITO!
+// 🔐 SESSION MANAGEMENT
 // =========================================================
 function iMayActiveSession() {
   const active = localStorage.getItem(SESSION_KEY) === 'true';
@@ -31,8 +32,7 @@ function iMayActiveSession() {
 function iLumikhaNgSession() {
   localStorage.setItem(SESSION_KEY, 'true');
   localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
-  // ✅ KAPAG NAG-LOGIN — IPASA ANG MENU AGAD!
-  renderSidebarMenu();
+  renderSidebarMenu(); // ✅ Agad ipakita ang buong menu
 }
 
 function iTapusinAngSession() {
@@ -40,8 +40,7 @@ function iTapusinAngSession() {
   localStorage.removeItem(SESSION_EXPIRY);
   localStorage.removeItem(SESSION_USER);
   if (sessionTimer) clearInterval(sessionTimer);
-  // ✅ KAPAG NAG-LOGOUT — I-REFRESH ANG MENU AGAD!
-  renderSidebarMenu();
+  renderSidebarMenu(); // ✅ Agad itago ang protektadong menu
 }
 
 function iKuninNatitirangOras() {
@@ -77,18 +76,18 @@ function iPalawiginSession() {
 }
 
 // =========================================================
-// 📋 MENU — ✅ INAYOS: NAKATAGO HANGGANG MAG-LOGIN
+// 📋 MENU — NAKATAGO HANGGANG MAG-LOGIN
 // =========================================================
 const DEFAULT_MENU = [
   { id: 'dashboard', label: '📊 Dashboard', page: 'dashboard', visible: true, requireLogin: true },
   { id: 'articles', label: '📝 Mga Artikulo', page: 'articles', visible: true, requireLogin: true },
   { id: 'settings', label: '⚙️ Mga Setting', page: 'settings', visible: true, requireLogin: true },
   { id: 'css-merger', label: '🎨 Ayusin CSS', page: 'css-merger', visible: true, requireLogin: true },
-  { id: 'setup-token', label: '🔑 Token Setup', page: 'setup-token', visible: true, requireLogin: false }, // ✅ LUMILITAW KAHIT HINDI NAKA-LOGIN
+  { id: 'setup-token', label: '🔑 Token Setup', page: 'setup-token', visible: true, requireLogin: false },
   { id: 'organizer', label: '🛠️ Tagapag-ayos', page: 'organizer', visible: true, requireLogin: true },
   { id: 'editor', label: '✏️ File Editor', page: 'editor', visible: true, requireLogin: true },
   { id: 'newpage', label: '➕ Bagong Pahina', page: 'newpage', visible: true, requireLogin: true },
-  { id: 'login', label: '🔐 Akawnt', page: 'login', visible: true, requireLogin: false } // ✅ LUMILITAW PALAGI
+  { id: 'login', label: '🔐 Akawnt', page: 'login', visible: true, requireLogin: false }
 ];
 
 // =========================================================
@@ -103,7 +102,7 @@ function detectEnvironment() {
 }
 
 // =========================================================
-// 📡 KATAYUAN NG KONEKSYON — Online / Offline
+// 📡 KATAYUAN NG KONEKSYON
 // =========================================================
 function updateConnectionStatus() {
   IS_ONLINE = navigator.onLine;
@@ -145,7 +144,7 @@ window.addEventListener('online', () => { IS_ONLINE = true; updateConnectionStat
 window.addEventListener('offline', () => { IS_ONLINE = false; updateConnectionStatus(); });
 
 // =========================================================
-// 📋 MENU — ✅ INAYOS: NAKATAGO KUNG HINDI NAKA-LOGIN
+// 📋 MENU RENDER — NAKATAGO KUNG HINDI NAKA-LOGIN
 // =========================================================
 function getMenuLayout() {
   const s = localStorage.getItem('wp_sidebar_layout');
@@ -163,7 +162,6 @@ function renderSidebarMenu() {
   m.innerHTML = '';
 
   layout.forEach(item => {
-    // ✅ KUNG KAILANGAN NG LOGIN AT HINDI PA NAKA-LOGIN → HUWAG IPALIT
     if (item.requireLogin && !iMayActiveSession()) return;
     if (!item.visible) return;
 
@@ -195,49 +193,31 @@ function handleDragStart(e) {
   e.dataTransfer.setData('text/plain', this.dataset.id);
   e.dataTransfer.effectAllowed = 'move';
 }
-
-function handleDragOver(e) {
-  e.preventDefault();
-  if (this !== draggedElement) this.classList.add('drag-over');
-}
-
-function handleDragLeave() {
-  this.classList.remove('drag-over');
-}
-
+function handleDragOver(e) { e.preventDefault(); if (this !== draggedElement) this.classList.add('drag-over'); }
+function handleDragLeave() { this.classList.remove('drag-over'); }
 function handleDrop(e) {
-  e.preventDefault();
-  this.classList.remove('drag-over');
+  e.preventDefault(); this.classList.remove('drag-over');
   if (!draggedElement || this === draggedElement) return;
-
   const layout = getMenuLayout();
   const fromId = draggedElement.dataset.id;
   const toId = this.dataset.id;
-
   const fromIdx = layout.findIndex(x => x.id === fromId);
   const toIdx = layout.findIndex(x => x.id === toId);
   if (fromIdx === -1 || toIdx === -1) return;
-
   const [moved] = layout.splice(fromIdx, 1);
   layout.splice(toIdx, 0, moved);
   saveMenuLayout(layout);
   renderSidebarMenu();
 }
-
 function handleDragEnd() {
-  document.querySelectorAll('.menu-item').forEach(el => {
-    el.classList.remove('dragging', 'drag-over');
-  });
+  document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('dragging', 'drag-over'));
   draggedElement = null;
 }
 
 // 📤 MGA PUBLIKONG UTOS
 window.getSidebarLayout = getMenuLayout;
 window.saveSidebarLayout = saveMenuLayout;
-window.resetSidebarLayout = () => {
-  localStorage.removeItem('wp_sidebar_layout');
-  renderSidebarMenu();
-};
+window.resetSidebarLayout = () => { localStorage.removeItem('wp_sidebar_layout'); renderSidebarMenu(); };
 window.toggleMenuItemVisibility = (id, visible) => {
   const layout = getMenuLayout();
   const item = layout.find(x => x.id === id);
@@ -248,18 +228,15 @@ window.addNewMenuItem = (id, label, page, pos = null) => {
   if (layout.find(x => x.id === id)) return false;
   const newItem = { id, label, page, visible: true, requireLogin: true };
   pos !== null ? layout.splice(pos, 0, newItem) : layout.push(newItem);
-  saveMenuLayout(layout);
-  renderSidebarMenu();
-  return true;
+  saveMenuLayout(layout); renderSidebarMenu(); return true;
 };
 window.deleteMenuItem = id => {
   let layout = getMenuLayout().filter(x => x.id !== id);
-  saveMenuLayout(layout);
-  renderSidebarMenu();
+  saveMenuLayout(layout); renderSidebarMenu();
 };
 
 // =========================================================
-// 📦 GITHUB REPOSITORY LISTING
+// 📦 GITHUB REPO
 // =========================================================
 const GH_API_BASE = 'https://api.github.com';
 let NAPILING_REPO = null;
@@ -272,57 +249,30 @@ window.iHanapinMgaRepo = async function(username, token) {
     });
     if (!sagot.ok) throw new Error(`Code: ${sagot.status}`);
     return { ok: true, repos: await sagot.json() };
-  } catch (mali) {
-    return { ok: false, error: mali.message };
-  }
+  } catch (mali) { return { ok: false, error: mali.message }; }
 };
-
-window.iPumiliNgRepo = function(repoFullName) {
-  NAPILING_REPO = repoFullName;
-  return NAPILING_REPO;
-};
-
-window.iKuninNapilingRepo = function() {
-  return NAPILING_REPO || localStorage.getItem('wp_gh_repo');
-};
+window.iPumiliNgRepo = repo => NAPILING_REPO = repo;
+window.iKuninNapilingRepo = () => NAPILING_REPO || localStorage.getItem('wp_gh_repo');
 
 // =========================================================
 // 💾 OFFLINE QUEUE
 // =========================================================
-function getOfflineQueue() {
-  const q = localStorage.getItem('wp_offline_queue');
-  return q ? JSON.parse(q) : [];
-}
-
+function getOfflineQueue() { const q = localStorage.getItem('wp_offline_queue'); return q ? JSON.parse(q) : []; }
 function saveToLocalQueue(fileName, content, filePath) {
   const q = getOfflineQueue();
-  q.push({
-    id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
-    fileName, content, filePath,
-    savedAt: new Date().toISOString(),
-    attempts: 0
-  });
+  q.push({ id: Date.now() + '-' + Math.random().toString(36).slice(2, 8), fileName, content, filePath, savedAt: new Date().toISOString(), attempts: 0 });
   localStorage.setItem('wp_offline_queue', JSON.stringify(q));
   updateSyncBadge();
 }
-
-function clearFromQueue(id) {
-  let q = getOfflineQueue().filter(x => x.id !== id);
-  localStorage.setItem('wp_offline_queue', JSON.stringify(q));
-  updateSyncBadge();
-}
-
+function clearFromQueue(id) { let q = getOfflineQueue().filter(x => x.id !== id); localStorage.setItem('wp_offline_queue', JSON.stringify(q)); updateSyncBadge(); }
 function updateSyncBadge() {
   const count = getOfflineQueue().length;
   const badge = document.getElementById('sync-pending');
-  if (badge) {
-    badge.style.display = count > 0 ? 'inline' : 'none';
-    badge.textContent = count;
-  }
+  if (badge) { badge.style.display = count > 0 ? 'inline' : 'none'; badge.textContent = count; }
 }
 
 // =========================================================
-// 🔄 SMART SAVE
+// 🔄 SYNC
 // =========================================================
 window.smartSaveFile = async function(fileName, content, filePath) {
   saveToLocalQueue(fileName, content, filePath);
@@ -330,59 +280,41 @@ window.smartSaveFile = async function(fileName, content, filePath) {
   alert('📡 OFFLINE — Naka-save muna sa Lokal.\n🔄 Ise-send sa GitHub kapag nakabalik na ang internet.');
   return { status: 'QUEUED', message: 'Nakaantay sa koneksyon' };
 };
-
 async function synchronizeNow() {
   const statusEl = document.getElementById('sync-status');
   const syncBtn = document.getElementById('sync-btn');
   if (!IS_ONLINE) { if(statusEl) statusEl.textContent = '❌ Walang internet'; return; }
-
   const queue = getOfflineQueue();
-  if (!queue.length) {
-    if(statusEl) statusEl.textContent = '✅ Wala nang isesend';
-    setTimeout(() => { if(statusEl) statusEl.textContent = 'Handa'; }, 2500);
-    return;
-  }
-
+  if (!queue.length) { if(statusEl) statusEl.textContent = '✅ Wala nang isesend'; setTimeout(() => { if(statusEl) statusEl.textContent = 'Handa'; }, 2500); return; }
   if(syncBtn) syncBtn.disabled = true;
   if(statusEl) statusEl.textContent = `⏳ Nagsisynchronize: ${queue.length}...`;
-
   let ok = 0, fail = 0;
   for (const item of queue) {
-    const result = await saveToGitHubDirect(item.fileName, item.content, item.filePath);
-    if (result.ok) { clearFromQueue(item.id); ok++; }
+    const res = await saveToGitHubDirect(item.fileName, item.content, item.filePath);
+    if (res.ok) { clearFromQueue(item.id); ok++; }
     else { item.attempts++; if (item.attempts >= 3) clearFromQueue(item.id); fail++; }
   }
-
   if(syncBtn) syncBtn.disabled = false;
   if(statusEl) statusEl.textContent = `✅ Tapos: ${ok} naisave${fail ? `, ${fail} nabigo` : ''}`;
   setTimeout(() => { if(statusEl) statusEl.textContent = 'Handa'; }, 4000);
 }
 
 // =========================================================
-// 📤 GITHUB DIRECT
+// 📤 GITHUB DIRECT SAVE
 // =========================================================
 async function saveToGitHubDirect(fileName, content, filePath) {
   const token = await getDecryptedToken();
   if (!token) return { ok: false, error: 'NO_TOKEN' };
-
   const { user, repo } = getRepoInfo();
   if (!user || !repo) return { ok: false, error: 'NO_REPO' };
-
   try {
-    const getRes = await fetch(`${GH_API_BASE}/repos/${user}/${repo}/contents/${filePath}`, {
-      headers: { 'Authorization': `token ${token}` }
-    });
+    const getRes = await fetch(`${GH_API_BASE}/repos/${user}/${repo}/contents/${filePath}`, { headers: { 'Authorization': `token ${token}` } });
     const sha = getRes.ok ? (await getRes.json()).sha : null;
     const b64 = btoa(unescape(encodeURIComponent(content)));
-    const body = {
-      message: `📝 Sync: ${fileName} — ${new Date().toLocaleString()}`,
-      content: b64
-    };
+    const body = { message: `📝 Sync: ${fileName} — ${new Date().toLocaleString()}`, content: b64 };
     if (sha) body.sha = sha;
-
     const putRes = await fetch(`${GH_API_BASE}/repos/${user}/${repo}/contents/${filePath}`, {
-      method: 'PUT',
-      headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+      method: 'PUT', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
     return { ok: putRes.ok, status: putRes.status };
@@ -390,62 +322,32 @@ async function saveToGitHubDirect(fileName, content, filePath) {
 }
 
 // =========================================================
-// 🔐 ENCRYPTION — TOKEN SECURITY
+// 🔐 ENCRYPTION & CREDENTIALS
 // =========================================================
-function deriveKey(password) {
-  const salt = 'wp-martodosko-2026-secret-salt';
-  return btoa(password + '|' + navigator.userAgent + '|' + salt);
-}
-
-function encryptData(data, password) {
-  const key = deriveKey(password);
-  let result = '';
-  for (let i = 0; i < data.length; i++) {
-    result += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-  }
-  return btoa(result);
-}
-
-function decryptData(encrypted, password) {
-  try {
-    const data = atob(encrypted);
-    const key = deriveKey(password);
-    let result = '';
-    for (let i = 0; i < data.length; i++) {
-      result += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-    }
-    return result;
-  } catch { return null; }
-}
+function deriveKey(p) { const s = 'wp-martodosko-2026-secret-salt'; return btoa(p + '|' + navigator.userAgent + '|' + s); }
+function encryptData(d, p) { const k = deriveKey(p); let r = ''; for(let i=0;i<d.length;i++) r += String.fromCharCode(d.charCodeAt(i) ^ k.charCodeAt(i % k.length)); return btoa(r); }
+function decryptData(e, p) { try { const d = atob(e), k = deriveKey(p); let r=''; for(let i=0;i<d.length;i++) r += String.fromCharCode(d.charCodeAt(i) ^ k.charCodeAt(i % k.length)); return r; } catch { return null; } }
 
 window.setupCredentials = function(password, token, username, repo) {
   localStorage.setItem('wp_enc_token', encryptData(token, password));
   localStorage.setItem('wp_enc_pass', encryptData(password, STORAGE_MASTER_KEY));
   localStorage.setItem('wp_gh_user', username);
   localStorage.setItem('wp_gh_repo', repo);
-  iLumikhaNgSession(); // ✅ Lumikha sesyon + IPASA ANG MENU AGAD
+  iLumikhaNgSession();
   updateUserStatus();
   return true;
 };
-
 async function getDecryptedToken() {
-  const encToken = localStorage.getItem('wp_enc_token');
-  const encPass = localStorage.getItem('wp_enc_pass');
-  if (!encToken || !encPass) return null;
-  const password = decryptData(encPass, STORAGE_MASTER_KEY);
-  return password ? decryptData(encToken, password) : null;
+  const et = localStorage.getItem('wp_enc_token'), ep = localStorage.getItem('wp_enc_pass');
+  if (!et || !ep) return null;
+  const pass = decryptData(ep, STORAGE_MASTER_KEY);
+  return pass ? decryptData(et, pass) : null;
 }
-
-function getRepoInfo() {
-  return {
-    user: localStorage.getItem('wp_gh_user'),
-    repo: localStorage.getItem('wp_gh_repo')
-  };
-}
+function getRepoInfo() { return { user: localStorage.getItem('wp_gh_user'), repo: localStorage.getItem('wp_gh_repo') }; }
 
 window.clearAllCredentials = function() {
   if (!confirm('🗑️ Sigurado bang burahin ang lahat?')) return;
-  iTapusinAngSession(); // ✅ TAPUSIN SESYON + I-REFRESH ANG MENU AGAD
+  iTapusinAngSession();
   localStorage.removeItem('wp_enc_token');
   localStorage.removeItem('wp_enc_pass');
   localStorage.removeItem('wp_gh_user');
@@ -461,7 +363,6 @@ function updateUserStatus() {
   const user = localStorage.getItem('wp_gh_user');
   const display = document.getElementById('user-display');
   const btn = document.getElementById('logout-btn');
-
   if (user && display) {
     display.textContent = '👤 ' + user;
     display.classList.add('online');
@@ -473,21 +374,59 @@ function updateUserStatus() {
   }
 }
 
-// ✅ SIDEBAR TOGGLE — KASAMA ANG EVENT PARA SA ADMIN.HTML
+// =========================================================
+// ✅ SIDEBAR TOGGLE + BUTTON SWAP + EVENT
+// =========================================================
 window.toggleSidebar = function() {
   const sb = document.getElementById('sidebar');
+  const btn = document.getElementById('sidebar-toggle');
   if (!sb) return;
   sb.classList.toggle('collapsed');
-  // ✅ PALITAN ANG BUTTON ☰ ↔ ✕
-  const btn = document.getElementById('sidebar-toggle');
   if (btn) btn.textContent = sb.classList.contains('collapsed') ? '☰' : '✕';
-  // ✅ IPADALA ANG EVENT PARA SA ADMIN.HTML NA SUMUSUNOD SA MARGIN
   document.body.dispatchEvent(new CustomEvent('sidebarToggled', {
     detail: { closed: sb.classList.contains('collapsed') }
   }));
 };
 
-// ✅ I-expose ang Session functions
+// =========================================================
+// ✅ SESYON MONITOR — KUSANG I-REFRESH ANG MENU
+// =========================================================
+function checkSessionChange() {
+  const current = localStorage.getItem(SESSION_KEY);
+  if (current !== lastSessionState) {
+    lastSessionState = current;
+    renderSidebarMenu();
+  }
+}
+
+// =========================================================
+// ✅ SWIPE DETECTION — KANAN/KALIWA
+// =========================================================
+(function() {
+  let startX = 0, isSwipeHorizontal = null;
+  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; isSwipeHorizontal = null; }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (isSwipeHorizontal === null) {
+      const dx = Math.abs(e.touches[0].clientX - startX);
+      const dy = Math.abs(e.touches[0].clientY - startY);
+      isSwipeHorizontal = dx > dy;
+    }
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!isSwipeHorizontal) return;
+    const endX = e.changedTouches[0].clientX;
+    const dx = endX - startX;
+    const threshold = 50;
+    const sb = document.getElementById('sidebar');
+    if (!sb) return;
+    if (dx > threshold && sb.classList.contains('collapsed')) toggleSidebar();
+    else if (dx < -threshold && !sb.classList.contains('collapsed')) toggleSidebar();
+  });
+})();
+
+// =========================================================
+// ✅ EXPOSE FUNCTIONS
+// =========================================================
 window.iMayActiveSession = iMayActiveSession;
 window.iLumikhaNgSession = iLumikhaNgSession;
 window.iTapusinAngSession = iTapusinAngSession;
@@ -505,50 +444,16 @@ document.addEventListener('DOMContentLoaded', () => {
   updateConnectionStatus();
   updateUserStatus();
   updateSyncBadge();
-  setTimeout(renderSidebarMenu, 50); // ✅ Ipakita ang tamang menu base sa sesyon
+  setTimeout(renderSidebarMenu, 50);
 
-  // ✅ I-set agad ang tamang icon ng buton
+  // ✅ I-set agad ang tamang buton
   const sb = document.getElementById('sidebar');
   const btn = document.getElementById('sidebar-toggle');
   if (sb && btn) btn.textContent = sb.classList.contains('collapsed') ? '☰' : '✕';
+
+  // ✅ Bantayan ang sesyon — kusang i-refresh ang menu
+  setInterval(checkSessionChange, 300);
+  window.addEventListener('storage', e => { if (e.key === SESSION_KEY) renderSidebarMenu(); });
 });
 
-// =========================================================
-// ✅ SWIPE DETECTION — KANAN/KALIWA
-// =========================================================
-(function() {
-  let startX = 0, isSwipeHorizontal = null;
-
-  document.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX;
-    isSwipeHorizontal = null;
-  }, { passive: true });
-
-  document.addEventListener('touchmove', e => {
-    if (isSwipeHorizontal === null) {
-      const dx = Math.abs(e.touches[0].clientX - startX);
-      const dy = Math.abs(e.touches[0].clientY - startY);
-      isSwipeHorizontal = dx > dy;
-    }
-  }, { passive: true });
-
-  document.addEventListener('touchend', e => {
-    if (!isSwipeHorizontal) return;
-    const endX = e.changedTouches[0].clientX;
-    const dx = endX - startX;
-    const threshold = 50;
-    const sb = document.getElementById('sidebar');
-    if (!sb) return;
-
-    // SWIPE KANAN → BUKASIN
-    if (dx > threshold && sb.classList.contains('collapsed')) {
-      toggleSidebar();
-    }
-    // SWIPE KALIWA → SARADIN
-    else if (dx < -threshold && !sb.classList.contains('collapsed')) {
-      toggleSidebar();
-    }
-  });
-})();
-
-console.log('✅ WP Martodosko — logic.js KUMPLETO NA — Menu Visibility + Swipe + Button + Session');
+console.log('✅ WP Martodosko — logic.js KUMPLETO NA — LAHAT NASA LOOB!');
