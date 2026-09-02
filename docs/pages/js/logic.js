@@ -1,6 +1,7 @@
 // =========================================================
 // 🧠 WP MARTODOSKO — KUMPLETONG LOGIC.JS
-// ✅ LAHAT NANDITO NA: Menu Visibility + Swipe + Button + Session + Toggle + Refresh
+// ✅ MALINIS: WALANG DOBLE NA SIDEBAR/TOGGLE/SWIPE CODE
+// ✅ ANG SIDEBAR → NAKA-SARILI SA sidebar.html — HINDI BANGGA
 // =========================================================
 
 // ✅ NAKA-TABI — GINAGAMIT NG ENCRYPTION
@@ -18,7 +19,6 @@ let draggedElement = null;
 let ENVIRONMENT = { isApp: false, isBrowser: true };
 let IS_ONLINE = navigator.onLine;
 let sessionTimer = null;
-let lastSessionState = localStorage.getItem(SESSION_KEY);
 
 // =========================================================
 // 🔐 SESSION MANAGEMENT
@@ -32,7 +32,7 @@ function iMayActiveSession() {
 function iLumikhaNgSession() {
   localStorage.setItem(SESSION_KEY, 'true');
   localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
-  renderSidebarMenu(); // ✅ Agad ipakita ang buong menu
+  renderSidebarMenu();
 }
 
 function iTapusinAngSession() {
@@ -40,7 +40,7 @@ function iTapusinAngSession() {
   localStorage.removeItem(SESSION_EXPIRY);
   localStorage.removeItem(SESSION_USER);
   if (sessionTimer) clearInterval(sessionTimer);
-  renderSidebarMenu(); // ✅ Agad itago ang protektadong menu
+  renderSidebarMenu();
 }
 
 function iKuninNatitirangOras() {
@@ -375,56 +375,6 @@ function updateUserStatus() {
 }
 
 // =========================================================
-// ✅ SIDEBAR TOGGLE + BUTTON SWAP + EVENT
-// =========================================================
-window.toggleSidebar = function() {
-  const sb = document.getElementById('sidebar');
-  const btn = document.getElementById('sidebar-toggle');
-  if (!sb) return;
-  sb.classList.toggle('collapsed');
-  if (btn) btn.textContent = sb.classList.contains('collapsed') ? '☰' : '✕';
-  document.body.dispatchEvent(new CustomEvent('sidebarToggled', {
-    detail: { closed: sb.classList.contains('collapsed') }
-  }));
-};
-
-// =========================================================
-// ✅ SESYON MONITOR — KUSANG I-REFRESH ANG MENU
-// =========================================================
-function checkSessionChange() {
-  const current = localStorage.getItem(SESSION_KEY);
-  if (current !== lastSessionState) {
-    lastSessionState = current;
-    renderSidebarMenu();
-  }
-}
-
-// =========================================================
-// ✅ SWIPE DETECTION — KANAN/KALIWA
-// =========================================================
-(function() {
-  let startX = 0, isSwipeHorizontal = null;
-  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; isSwipeHorizontal = null; }, { passive: true });
-  document.addEventListener('touchmove', e => {
-    if (isSwipeHorizontal === null) {
-      const dx = Math.abs(e.touches[0].clientX - startX);
-      const dy = Math.abs(e.touches[0].clientY - startY);
-      isSwipeHorizontal = dx > dy;
-    }
-  }, { passive: true });
-  document.addEventListener('touchend', e => {
-    if (!isSwipeHorizontal) return;
-    const endX = e.changedTouches[0].clientX;
-    const dx = endX - startX;
-    const threshold = 50;
-    const sb = document.getElementById('sidebar');
-    if (!sb) return;
-    if (dx > threshold && sb.classList.contains('collapsed')) toggleSidebar();
-    else if (dx < -threshold && !sb.classList.contains('collapsed')) toggleSidebar();
-  });
-})();
-
-// =========================================================
 // ✅ EXPOSE FUNCTIONS
 // =========================================================
 window.iMayActiveSession = iMayActiveSession;
@@ -445,15 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
   updateUserStatus();
   updateSyncBadge();
   setTimeout(renderSidebarMenu, 50);
-
-  // ✅ I-set agad ang tamang buton
-  const sb = document.getElementById('sidebar');
-  const btn = document.getElementById('sidebar-toggle');
-  if (sb && btn) btn.textContent = sb.classList.contains('collapsed') ? '☰' : '✕';
-
-  // ✅ Bantayan ang sesyon — kusang i-refresh ang menu
-  setInterval(checkSessionChange, 300);
-  window.addEventListener('storage', e => { if (e.key === SESSION_KEY) renderSidebarMenu(); });
 });
 
-console.log('✅ WP Martodosko — logic.js KUMPLETO NA — LAHAT NASA LOOB!');
+console.log('✅ WP Martodosko — logic.js HANDA NA — WALANG DOBLE NA SIDEBAR CODE!');
