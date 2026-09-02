@@ -1,6 +1,6 @@
 // =========================================================
 // 🧠 WP MARTODOSKO — KUMPLETONG LOGIC.JS
-// ✅ SESSION CHECK + REPO LISTING + LAHAT NG KAILANGAN
+// ✅ INAYOS: MENU LUMILITAW PAGKALOGIN + SWIPE + BUTTON + SESSION
 // =========================================================
 
 // ✅ NAKA-TABI — GINAGAMIT NG ENCRYPTION
@@ -22,29 +22,28 @@ let sessionTimer = null;
 // =========================================================
 // 🔐 SESSION MANAGEMENT — KUMPLETO NA DITO!
 // =========================================================
-
-// ✅ Suriin kung may aktibong sesyon
 function iMayActiveSession() {
   const active = localStorage.getItem(SESSION_KEY) === 'true';
   const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
   return active && Date.now() < expiry;
 }
 
-// ✅ Lumikha ng bagong sesyon
 function iLumikhaNgSession() {
   localStorage.setItem(SESSION_KEY, 'true');
   localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
+  // ✅ KAPAG NAG-LOGIN — IPASA ANG MENU AGAD!
+  renderSidebarMenu();
 }
 
-// ✅ Tapusin / I-clear ang sesyon
 function iTapusinAngSession() {
   localStorage.removeItem(SESSION_KEY);
   localStorage.removeItem(SESSION_EXPIRY);
   localStorage.removeItem(SESSION_USER);
   if (sessionTimer) clearInterval(sessionTimer);
+  // ✅ KAPAG NAG-LOGOUT — I-REFRESH ANG MENU AGAD!
+  renderSidebarMenu();
 }
 
-// ✅ Kunin ang natitirang oras — [oras, minuto]
 function iKuninNatitirangOras() {
   const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
   const natitira = expiry - Date.now();
@@ -54,14 +53,11 @@ function iKuninNatitirangOras() {
   return [oras, minuto];
 }
 
-// ✅ Ipakita ang countdown — tawagin sa login.html
 function iSimulanSessionCountdown(elId = 'session-timer') {
   if (sessionTimer) clearInterval(sessionTimer);
-  
   const update = () => {
     const el = document.getElementById(elId);
     if (!el) return;
-    
     const [oras, minuto] = iKuninNatitirangOras();
     if (oras <= 0 && minuto <= 0) {
       el.textContent = '❌ Nag-expire na';
@@ -71,30 +67,28 @@ function iSimulanSessionCountdown(elId = 'session-timer') {
     }
     el.textContent = `${oras}h ${minuto}m natitira`;
   };
-
   update();
-  sessionTimer = setInterval(update, 30000); // Bawat 30 segundo
+  sessionTimer = setInterval(update, 30000);
 }
 
-// ✅ Palawigin ang sesyon +2 oras
 function iPalawiginSession() {
   localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
   alert('✅ Pinalawig pa ng 2 oras ang sesyon!');
 }
 
 // =========================================================
-// 📋 MENU — KASAMA ANG LAHAT NG PINDUTAN
+// 📋 MENU — ✅ INAYOS: NAKATAGO HANGGANG MAG-LOGIN
 // =========================================================
 const DEFAULT_MENU = [
-  { id: 'dashboard', label: '📊 Dashboard', page: 'dashboard', visible: true },
-  { id: 'articles', label: '📝 Mga Artikulo', page: 'articles', visible: true },
-  { id: 'settings', label: '⚙️ Mga Setting', page: 'settings', visible: true },
-  { id: 'css-merger', label: '🎨 Ayusin CSS', page: 'css-merger', visible: true },
-  { id: 'setup-token', label: '🔑 Token Setup', page: 'setup-token', visible: true },
-  { id: 'organizer', label: '🛠️ Tagapag-ayos', page: 'organizer', visible: true },
-  { id: 'editor', label: '✏️ File Editor', page: 'editor', visible: true },
-  { id: 'newpage', label: '➕ Bagong Pahina', page: 'newpage', visible: true },
-  { id: 'login', label: '🔐 Akawnt', page: 'login', visible: true }
+  { id: 'dashboard', label: '📊 Dashboard', page: 'dashboard', visible: true, requireLogin: true },
+  { id: 'articles', label: '📝 Mga Artikulo', page: 'articles', visible: true, requireLogin: true },
+  { id: 'settings', label: '⚙️ Mga Setting', page: 'settings', visible: true, requireLogin: true },
+  { id: 'css-merger', label: '🎨 Ayusin CSS', page: 'css-merger', visible: true, requireLogin: true },
+  { id: 'setup-token', label: '🔑 Token Setup', page: 'setup-token', visible: true, requireLogin: false }, // ✅ LUMILITAW KAHIT HINDI NAKA-LOGIN
+  { id: 'organizer', label: '🛠️ Tagapag-ayos', page: 'organizer', visible: true, requireLogin: true },
+  { id: 'editor', label: '✏️ File Editor', page: 'editor', visible: true, requireLogin: true },
+  { id: 'newpage', label: '➕ Bagong Pahina', page: 'newpage', visible: true, requireLogin: true },
+  { id: 'login', label: '🔐 Akawnt', page: 'login', visible: true, requireLogin: false } // ✅ LUMILITAW PALAGI
 ];
 
 // =========================================================
@@ -151,7 +145,7 @@ window.addEventListener('online', () => { IS_ONLINE = true; updateConnectionStat
 window.addEventListener('offline', () => { IS_ONLINE = false; updateConnectionStatus(); });
 
 // =========================================================
-// 📋 MENU — KUNIN / I-SAVE / ILABAS — MAY HILAHIN DIREKTA SA SIDEBAR!
+// 📋 MENU — ✅ INAYOS: NAKATAGO KUNG HINDI NAKA-LOGIN
 // =========================================================
 function getMenuLayout() {
   const s = localStorage.getItem('wp_sidebar_layout');
@@ -169,6 +163,8 @@ function renderSidebarMenu() {
   m.innerHTML = '';
 
   layout.forEach(item => {
+    // ✅ KUNG KAILANGAN NG LOGIN AT HINDI PA NAKA-LOGIN → HUWAG IPALIT
+    if (item.requireLogin && !iMayActiveSession()) return;
     if (!item.visible) return;
 
     const btn = document.createElement('button');
@@ -192,7 +188,7 @@ function renderSidebarMenu() {
   });
 }
 
-// 🖐️ DRAG-AND-DROP — DIREKTA SA SIDEBAR!
+// 🖐️ DRAG-AND-DROP
 function handleDragStart(e) {
   draggedElement = this;
   this.classList.add('dragging');
@@ -235,7 +231,7 @@ function handleDragEnd() {
   draggedElement = null;
 }
 
-// 📤 MGA PUBLIKONG UTOS — PARA SA TAGAPAG-AYOS
+// 📤 MGA PUBLIKONG UTOS
 window.getSidebarLayout = getMenuLayout;
 window.saveSidebarLayout = saveMenuLayout;
 window.resetSidebarLayout = () => {
@@ -250,7 +246,7 @@ window.toggleMenuItemVisibility = (id, visible) => {
 window.addNewMenuItem = (id, label, page, pos = null) => {
   const layout = getMenuLayout();
   if (layout.find(x => x.id === id)) return false;
-  const newItem = { id, label, page, visible: true };
+  const newItem = { id, label, page, visible: true, requireLogin: true };
   pos !== null ? layout.splice(pos, 0, newItem) : layout.push(newItem);
   saveMenuLayout(layout);
   renderSidebarMenu();
@@ -263,7 +259,7 @@ window.deleteMenuItem = id => {
 };
 
 // =========================================================
-// 📦 GITHUB REPOSITORY LISTING — PARA SA CREATE.HTML ✅
+// 📦 GITHUB REPOSITORY LISTING
 // =========================================================
 const GH_API_BASE = 'https://api.github.com';
 let NAPILING_REPO = null;
@@ -291,7 +287,7 @@ window.iKuninNapilingRepo = function() {
 };
 
 // =========================================================
-// 💾 OFFLINE QUEUE — PAG-SAVE SA LOKAL KAPAG WALANG INTERNET
+// 💾 OFFLINE QUEUE
 // =========================================================
 function getOfflineQueue() {
   const q = localStorage.getItem('wp_offline_queue');
@@ -326,7 +322,7 @@ function updateSyncBadge() {
 }
 
 // =========================================================
-// 🔄 SMART SAVE — LOKAL → GITHUB KAPAG ONLINE
+// 🔄 SMART SAVE
 // =========================================================
 window.smartSaveFile = async function(fileName, content, filePath) {
   saveToLocalQueue(fileName, content, filePath);
@@ -363,7 +359,7 @@ async function synchronizeNow() {
 }
 
 // =========================================================
-// 📤 GITHUB DIRECT — TUNAY NA PAG-SAVE SA GITHUB
+// 📤 GITHUB DIRECT
 // =========================================================
 async function saveToGitHubDirect(fileName, content, filePath) {
   const token = await getDecryptedToken();
@@ -427,7 +423,7 @@ window.setupCredentials = function(password, token, username, repo) {
   localStorage.setItem('wp_enc_pass', encryptData(password, STORAGE_MASTER_KEY));
   localStorage.setItem('wp_gh_user', username);
   localStorage.setItem('wp_gh_repo', repo);
-  iLumikhaNgSession(); // ✅ Lumikha agad ng sesyon
+  iLumikhaNgSession(); // ✅ Lumikha sesyon + IPASA ANG MENU AGAD
   updateUserStatus();
   return true;
 };
@@ -449,7 +445,7 @@ function getRepoInfo() {
 
 window.clearAllCredentials = function() {
   if (!confirm('🗑️ Sigurado bang burahin ang lahat?')) return;
-  iTapusinAngSession();
+  iTapusinAngSession(); // ✅ TAPUSIN SESYON + I-REFRESH ANG MENU AGAD
   localStorage.removeItem('wp_enc_token');
   localStorage.removeItem('wp_enc_pass');
   localStorage.removeItem('wp_gh_user');
@@ -477,14 +473,21 @@ function updateUserStatus() {
   }
 }
 
+// ✅ SIDEBAR TOGGLE — KASAMA ANG EVENT PARA SA ADMIN.HTML
 window.toggleSidebar = function() {
   const sb = document.getElementById('sidebar');
-  if(sb) sb.classList.toggle('collapsed');
-  const content = document.getElementById('content-wrapper');
-  if (content) content.classList.toggle('sidebar-hidden');
+  if (!sb) return;
+  sb.classList.toggle('collapsed');
+  // ✅ PALITAN ANG BUTTON ☰ ↔ ✕
+  const btn = document.getElementById('sidebar-toggle');
+  if (btn) btn.textContent = sb.classList.contains('collapsed') ? '☰' : '✕';
+  // ✅ IPADALA ANG EVENT PARA SA ADMIN.HTML NA SUMUSUNOD SA MARGIN
+  document.body.dispatchEvent(new CustomEvent('sidebarToggled', {
+    detail: { closed: sb.classList.contains('collapsed') }
+  }));
 };
 
-// ✅ I-expose ang Session functions para sa login.html
+// ✅ I-expose ang Session functions
 window.iMayActiveSession = iMayActiveSession;
 window.iLumikhaNgSession = iLumikhaNgSession;
 window.iTapusinAngSession = iTapusinAngSession;
@@ -495,21 +498,57 @@ window.getDecryptedToken = getDecryptedToken;
 window.getRepoInfo = getRepoInfo;
 
 // =========================================================
-// ✅ PAGKABUKAS — LAHAT KUSANG TUMATAKBO
+// ✅ PAGKABUKAS — KUSANG TUMATAKBO
 // =========================================================
 document.addEventListener('DOMContentLoaded', () => {
   detectEnvironment();
   updateConnectionStatus();
   updateUserStatus();
   updateSyncBadge();
-  setTimeout(renderSidebarMenu, 50);
+  setTimeout(renderSidebarMenu, 50); // ✅ Ipakita ang tamang menu base sa sesyon
+
+  // ✅ I-set agad ang tamang icon ng buton
+  const sb = document.getElementById('sidebar');
+  const btn = document.getElementById('sidebar-toggle');
+  if (sb && btn) btn.textContent = sb.classList.contains('collapsed') ? '☰' : '✕';
 });
 
 // =========================================================
-// ✅ BAGONG AYOS MULA SA TAGAPAG-AYOS — TUMANGGAP NG PAGBABAGO
+// ✅ SWIPE DETECTION — KANAN/KALIWA
 // =========================================================
-window.addEventListener('bagongAyosNgMenu', () => {
-  renderSidebarMenu();
-});
+(function() {
+  let startX = 0, isSwipeHorizontal = null;
 
-console.log('✅ WP Martodosko — logic.js KUMPLETO NA — Session + Repo Listing + Lahat');
+  document.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    isSwipeHorizontal = null;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (isSwipeHorizontal === null) {
+      const dx = Math.abs(e.touches[0].clientX - startX);
+      const dy = Math.abs(e.touches[0].clientY - startY);
+      isSwipeHorizontal = dx > dy;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!isSwipeHorizontal) return;
+    const endX = e.changedTouches[0].clientX;
+    const dx = endX - startX;
+    const threshold = 50;
+    const sb = document.getElementById('sidebar');
+    if (!sb) return;
+
+    // SWIPE KANAN → BUKASIN
+    if (dx > threshold && sb.classList.contains('collapsed')) {
+      toggleSidebar();
+    }
+    // SWIPE KALIWA → SARADIN
+    else if (dx < -threshold && !sb.classList.contains('collapsed')) {
+      toggleSidebar();
+    }
+  });
+})();
+
+console.log('✅ WP Martodosko — logic.js KUMPLETO NA — Menu Visibility + Swipe + Button + Session');
